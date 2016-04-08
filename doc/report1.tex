@@ -1,0 +1,72 @@
+\documentclass[11pt]{article}
+\usepackage{acl2016}
+\usepackage{times}
+\usepackage{url}
+\usepackage{latexsym}
+
+\newcommand\BibTeX{B{\sc ib}\TeX}
+\aclfinalcopy
+
+\title{NLP 2 - Project 1}
+
+\author{Pepijn Kokke, Edwin Odijk, Thijs Scheepers}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+%we translate stuff
+%we use IBM Models 1 \& 2
+%improvements used
+%experiments done
+%results
+%conclusion
+\end{abstract}
+
+\section{Introduction}
+%we translated using IBM models 1 & 2
+%mention shortcomings of these models (such as the "ook -> as well" example, where translation can't happen both ways (should be confirmed though, maybe we're making an oversight))
+%we made some improvements
+
+\section{Model}
+%short summary IBM 1 \& 2
+%describe choice and implementation of each improvement
+
+\section{Experiments}
+%mention data (train set, test set) #NOTE: test set is not yet provided to us, still greyed out on website. If we never get any, we'll have to split the train data
+%mention both models will be described separately
+
+\subsection{IBM model1}
+%EM on train set
+%improvements on IBM model 1
+%Viterbi alignments (= most likely alignments, argmax a) and computing AER (yet to be provided)
+
+\subsection{IBM model 2}
+%optimisation with different model parameters: (NOTE: literally from the project description)
+% - uniform init
+% - random init (THREE times)
+% - initialising lexical parameters with results from IBM model 1 (=unique words recognised)
+% compute AER again and compare with IBM model 1
+
+\section{Results}
+%mention both models will be described separately
+
+\subsection{IBM model 1}
+% log likelihood change over iterations plot
+%"In your report, you should also consider the limitations of Model 1 as described by Moore (2004), and find examples in your output to illustrate these limitations."
+%viterbi alignments & AER results
+
+\subsection{IBM model 2}
+% for all FIVE parameter initializations (five because random is run three times), plot log likelihood growth over iterations
+% AER results, compare with IBM model 1 results
+
+\section{Conclusion}
+% likely points of interest:
+% - model 2 will (should) outperform model 1
+% - improvements on model 1
+% - initialising model 2 with model 1's lexical types is likely to outperform the uniform/random initialisation
+
+\end{document}
