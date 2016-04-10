@@ -77,7 +77,7 @@ class IBM2:
         aligns = defaultdict(set)
 
         for k, (f, e) in enumerate(corpus):
-            stdout.write("\rInit     %5.2f%%" % ((33*k) / float(len(corpus))))
+            stdout.write("\rInit    %6.2f%%" % ((33*k) / float(len(corpus))))
             stdout.flush()
 
             lens.add((len(e), len(f)))
@@ -89,7 +89,7 @@ class IBM2:
         k = 0
         t = dict()
         for e, aligns_to_e in aligns.iteritems():
-            stdout.write("\rInit     %5.2f%%" % (33 + ((33*k) / float(len(aligns)))))
+            stdout.write("\rInit    %6.2f%%" % (33 + ((33*k) / float(len(aligns)))))
             stdout.flush()
             k += 1
 
@@ -99,7 +99,7 @@ class IBM2:
         # "Compute initial probabilities for each distortion..."
         q = dict()
         for k, (l, m) in enumerate(lens):
-            stdout.write("\rInit     %5.2f%%" % (66 + ((33*k) / float(len(lens)))))
+            stdout.write("\rInit    %6.2f%%" % (66 + ((33*k) / float(len(lens)))))
             stdout.flush()
 
             for i in range(1,m):
@@ -127,7 +127,11 @@ if __name__ == "__main__":
     model_path_10  = '../data/hansards.36.2.rand.pass10.pack'
     model_path_20  = '../data/hansards.36.2.rand.pass20.pack'
     corpus         = zip(read_corpus(fr_corpus_path),read_corpus(en_corpus_path))
-    corpus         = corpus[:1000]
+    corpus         = corpus
 
     ibm = IBM2.random(corpus)
-    ibm.em_train(corpus,n=2)
+    with open(model_path_0,'w') as f:
+        ibm.dump(f)
+    ibm.em_train(corpus,n=1)
+    with open(model_path_1,'w') as f:
+        ibm.dump(f)
