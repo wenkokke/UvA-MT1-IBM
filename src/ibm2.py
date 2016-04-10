@@ -65,22 +65,24 @@ class IBM2:
 
 
 def read_corpus(path):
+    """Read a file as a list of lists of words."""
     with open(path,'r') as f:
-        return [ ln.strip().split() for ln in f.readlines() ]
+        return[ ln.strip().split() for ln in f ]
 
 
-fr_corpus_path = '../data/training/hansards.36.2.f'
-en_corpus_path = '../data/training/hansards.36.2.e'
-model_path_1   = '../data/training/hansards.36.2.pass1.pack'
-model_path_5   = '../data/training/hansards.36.2.pass5.pack'
-model_path_10  = '../data/training/hansards.36.2.pass10.pack'
-corpus         = zip(read_corpus(fr_corpus_path),read_corpus(en_corpus_path))
+if __name__ == "__main__":
 
+    fr_corpus_path = '../data/training/hansards.36.2.f'
+    en_corpus_path = '../data/training/hansards.36.2.e'
+    model_path_1   = '../data/training/hansards.36.2.pass1.pack'
+    model_path_5   = '../data/training/hansards.36.2.pass5.pack'
+    model_path_10  = '../data/training/hansards.36.2.pass10.pack'
+    corpus         = zip(read_corpus(fr_corpus_path),read_corpus(en_corpus_path))
 
-with open(model_path_1,'r') as stream:
-    ibm = IBM2.load(stream)
+    with open(model_path_1,'r') as stream:
+        ibm = IBM2.load(stream)
 
-ibm.em_train(corpus,n=4)
+    ibm.em_train(corpus,n=4)
 
-with open(model_path_5,'w') as stream:
-    ibm.dump(stream)
+    with open(model_path_5,'w') as stream:
+        ibm.dump(stream)
