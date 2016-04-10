@@ -37,8 +37,9 @@ class IBM2:
 
         for k, (e, f) in enumerate(corpus):
 
-            stdout.write("\rPass %2d: %7.3f%%" % (passnum, (100*k) / float(len(corpus))))
-            stdout.flush()
+            if k % 100 == 0:
+                stdout.write("\rPass %2d: %6.2f%%" % (passnum, (100*k) / float(len(corpus))))
+                stdout.flush()
 
             l = len(e)
             m = len(f)
