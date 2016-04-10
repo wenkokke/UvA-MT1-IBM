@@ -21,8 +21,8 @@ class IBM2:
         self.t = t
         self.q = q
 
-    def em_train(self,corpus,n=10):
-        for k in range(1,n+1):
+    def em_train(self,corpus,n=10, s=1):
+        for k in range(s,n+s):
             self.em_iter(corpus,passnum=k)
             print("\rPass %2d: 100.00%%" % k)
 
@@ -62,9 +62,8 @@ class IBM2:
         self.q = defaultdict(float,{k: v / c4[k[1:]] for k,v in c3.iteritems() if v > 0.0})
 
     @classmethod
-    def random(cls,corpus):
-        return cls.with_generator(
-            corpus, lambda n: np.random.dirichlet(np.ones(n),size=1)[0])
+    def random(cls):
+        return IBM2(defaultdict(random), defaultdict(random))
 
     @classmethod
     def uniform(cls,corpus):
@@ -120,19 +119,21 @@ def read_corpus(path):
 
 if __name__ == "__main__":
 
-    fr_corpus_path = path.join(path.dirname(__file__),'../data/training/hansards.36.2.f')
-    en_corpus_path = path.join(path.dirname(__file__),'../data/training/hansards.36.2.e')
-    model_path_0   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pack')
-    model_path_1   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass1.pack')
-    model_path_5   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass5.pack')
-    model_path_10  = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass10.pack')
-    model_path_20  = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass20.pack')
-    corpus         = zip(read_corpus(fr_corpus_path),read_corpus(en_corpus_path))
-    corpus         = corpus
+    corpus_path = '../data/training/hansards.36.2'
+    fr_corpus_path = corpus_path + '.f'
+    en_corpus_path = corpus_path + '.e'
+    corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
-    ibm = IBM2.random(corpus)
-    with open(model_path_0,'w') as f:
-        ibm.dump(f)
-    ibm.em_train(corpus,n=1)
-    with open(model_path_1,'w') as f:
-        ibm.dump(f)
+    ibm = IBM2.uniform(corpus)
+
+    for s in range(1, 21):
+        pack_path = corpus_path + '.' + str(s) + '.uniform2.pack'
+        if path.isfile(pack_path):
+            with open(pack_path, 'r') as stream:
+                ibm = IBM2.load(stream)
+            print "Loaded %s" % (pack_path)
+        else:
+            ibm.em_train(corpus, n=1, s=s)
+            with open(pack_path, 'w') as stream:
+                ibm.dump(stream)
+            print "Dumped %s" % (pack_path)
