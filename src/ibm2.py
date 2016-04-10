@@ -3,6 +3,7 @@ from itertools   import chain,product
 from msgpack     import pack,unpack
 from random      import random
 from sys         import stdout
+from os          import path
 
 import numpy as np
 
@@ -119,13 +120,13 @@ def read_corpus(path):
 
 if __name__ == "__main__":
 
-    fr_corpus_path = '../data/training/hansards.36.2.f'
-    en_corpus_path = '../data/training/hansards.36.2.e'
-    model_path_0   = '../data/hansards.36.2.rand.pack'
-    model_path_1   = '../data/hansards.36.2.rand.pass1.pack'
-    model_path_5   = '../data/hansards.36.2.rand.pass5.pack'
-    model_path_10  = '../data/hansards.36.2.rand.pass10.pack'
-    model_path_20  = '../data/hansards.36.2.rand.pass20.pack'
+    fr_corpus_path = path.join(path.dirname(__file__),'../data/training/hansards.36.2.f')
+    en_corpus_path = path.join(path.dirname(__file__),'../data/training/hansards.36.2.e')
+    model_path_0   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pack')
+    model_path_1   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass1.pack')
+    model_path_5   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass5.pack')
+    model_path_10  = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass10.pack')
+    model_path_20  = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass20.pack')
     corpus         = zip(read_corpus(fr_corpus_path),read_corpus(en_corpus_path))
     corpus         = corpus
 
