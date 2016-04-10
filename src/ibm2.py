@@ -69,17 +69,17 @@ def read_corpus(path):
 
 fr_corpus_path = '../data/training/hansards.36.2.f'
 en_corpus_path = '../data/training/hansards.36.2.e'
-alignment_path = '../data/training/hansards.36.2.pass1.json'
+model_path_1   = '../data/training/hansards.36.2.pass1.pack'
+model_path_5   = '../data/training/hansards.36.2.pass5.pack'
+model_path_10  = '../data/training/hansards.36.2.pass10.pack'
 corpus         = zip(read_corpus(fr_corpus_path),read_corpus(en_corpus_path))
 
 
-#with open(alignment_path,'r') as stream:
-#    ibm = IBM2.load(stream)
+with open(model_path_1,'r') as stream:
+    ibm = IBM2.load(stream)
 
 ibm = IBM2.random()
-ibm.em_train(corpus,n=1)
+ibm.em_train(corpus,n=4)
 
-print ibm.t
-
-with open(alignment_path,'w') as stream:
+with open(model_path_5,'w') as stream:
     ibm.dump(stream)
