@@ -68,7 +68,7 @@ class IBM2:
 
     @classmethod
     def uniform(cls,corpus):
-        return cls.with_generator(corpus, lambda n: 1 / float(n))
+        return cls.with_generator(corpus, lambda n: [1 / float(n)] * n)
 
     @classmethod
     def with_generator(cls,corpus,g):
@@ -117,41 +117,21 @@ def read_corpus(path):
     with open(path,'r') as f:
         return [ ln.strip().split() for ln in f ]
 
-
 if __name__ == "__main__":
-    src = path.dirname(__file__)
-    mini_corpus_txt  = path.join(src,'../data/mini_corpus.txt')
-    mini_corpus_pack = path.join(src,'../data/mini_corpus.pack')
 
-    with open(mini_corpus_txt,'r') as f:
-        corpus = [ln.strip().split() for ln in f.readlines()]
-        corpus = zip(corpus[0:][::3],corpus[1:][::3])
+    fr_corpus_path = path.join(path.dirname(__file__),'../data/training/hansards.36.2.f')
+    en_corpus_path = path.join(path.dirname(__file__),'../data/training/hansards.36.2.e')
+    model_path_0   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pack')
+    model_path_1   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass1.pack')
+    model_path_5   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass5.pack')
+    model_path_10  = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass10.pack')
+    model_path_20  = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass20.pack')
+    corpus         = zip(read_corpus(fr_corpus_path),read_corpus(en_corpus_path))
+    corpus         = corpus
 
-        ibm = IBM2.random(corpus)
-        ibm.em_train(corpus,n=20)
-
-    with open(mini_corpus_pack,'w') as f:
+    ibm = IBM2.random(corpus)
+    with open(model_path_0,'w') as f:
         ibm.dump(f)
-
-    for k,v in ibm.t.iteritems():
-        if v > 0.05:
-            print k, v
-
-#if __name__ == "__main__":
-#
-#    fr_corpus_path = path.join(path.dirname(__file__),'../data/training/hansards.36.2.f')
-#    en_corpus_path = path.join(path.dirname(__file__),'../data/training/hansards.36.2.e')
-#    model_path_0   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pack')
-#    model_path_1   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass1.pack')
-#    model_path_5   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass5.pack')
-#    model_path_10  = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass10.pack')
-#    model_path_20  = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass20.pack')
-#    corpus         = zip(read_corpus(fr_corpus_path),read_corpus(en_corpus_path))
-#    corpus         = corpus
-#
-#    ibm = IBM2.random(corpus)
-#    with open(model_path_0,'w') as f:
-#        ibm.dump(f)
-#    ibm.em_train(corpus,n=1)
-#    with open(model_path_1,'w') as f:
-#        ibm.dump(f)
+    ibm.em_train(corpus,n=1)
+    with open(model_path_1,'w') as f:
+        ibm.dump(f)
