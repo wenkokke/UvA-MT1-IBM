@@ -37,12 +37,13 @@ class IBM1:
                 stdout.write("\rPass %2d: %6.2f%%" % (passnum, (100*k) / float(len(corpus))))
                 stdout.flush()
 
-            l = len(e)
-            m = len(f)
             e = [None] + e
+            l = len(e)
+            m = len(f) + 1
+
             q = 1 / float(len(e))
 
-            for i in range(1,m + 1):
+            for i in range(1,m):
 
                 num = [ q * self.t[(f[i - 1], e[j])] for j in range(0,l) ]
                 den = float(sum(num))
