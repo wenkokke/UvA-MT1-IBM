@@ -41,9 +41,9 @@ class IBM2:
                 stdout.write("\rPass %2d: %6.2f%%" % (passnum, (100*k) / float(len(corpus))))
                 stdout.flush()
 
-            e = [None] + e
-            l = len(e)
+            l = len(e) + 1
             m = len(f) + 1
+            e = [None] + e
 
             for i in range(1,m):
 
@@ -64,22 +64,22 @@ class IBM2:
         self.q = defaultdict(float,{k: v / c4[k[1:]] for k,v in c3.iteritems() if v > 0.0})
 
     def predict_alignment(self,e,f):
-        e = [None] + e
-        l = len(e)
+        l = len(e) + 1
         m = len(f) + 1
-        r = []
+        e = [None] + e
+
+        a = []
         for i in range(1, m):
             p_e = {k: v * self.q[(e.index(k[1]), i, l, m)]
                    for k, v in self.t.iteritems()
                    if k[0] == f[i - 1] and k[1] in e}
 
             if len(p_e) == 0:
-                r.append(0)
+                a.append(0)
             else:
-                r.append(e.index(
+                a.append(e.index(
                     max(p_e.iteritems(), key=operator.itemgetter(1))[0][1]))
-
-        return r
+        return a
 
     @classmethod
     def random(cls):
