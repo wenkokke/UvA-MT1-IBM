@@ -6,6 +6,7 @@ from sys         import stdout
 from os          import path
 import operator
 
+import operator
 import numpy as np
 
 class IBM2:
@@ -63,19 +64,19 @@ class IBM2:
         self.q = defaultdict(float,{k: v / c4[k[1:]] for k,v in c3.iteritems() if v > 0.0})
 
     def predict_alignment(self,e,f):
+        e = [None] + e
         l = len(e)
         m = len(f)
         r = []
         for i in range(1, m + 1):
+            p_e = {k: v for k, v in self.t.iteritems() if k[0] == f[i - 1] and k[1] in e}
+            map_dict(lambda x, k: x * self.q[(e.index(k[1]), i, l, m)], p_e)
 
-            es = {k: v for k, v in self.t.iteritems() if k[0] == f[i - 1] and k[1] in e}
-            map_dict(lambda x, k: x * self.q[(e.index(k[1]), i, l, m)], es)
-
-            if len(es) == 0:
-                r.append(0)
+            if len(p_e) == 0:
+                r.append(e.index(None))
             else:
-                ew = max(es.iteritems(), key=operator.itemgetter(1))[0][1]
-                r.append(e.index(ew) + 1)
+                ew = max(p_e.iteritems(), key=operator.itemgetter(1))[0][1]
+                r.append(e.index(ew))
 
         return r
 
@@ -120,7 +121,7 @@ class IBM2:
             stdout.write("\rInit    %6.2f%%" % (66 + ((33*k) / float(len(lens)))))
             stdout.flush()
 
-            for i in range(1,m):
+            for i in range(1,m + 1):
                 p_values = g(l)
                 for j in range(0,l):
                     q[(j,i,l,m)] = p_values[j]
@@ -141,32 +142,41 @@ def read_corpus(path):
 
 if __name__ == "__main__":
 
-    corpus_path = '../data/training/hansards.36.2'
-    fr_corpus_path = corpus_path + '.f'
-    en_corpus_path = corpus_path + '.e'
-
-    pack_path = corpus_path + '.20.uniform2.pack'
-    with open(pack_path, 'r') as stream:
-        ibm = IBM2.load(stream)
-        result = ibm.predict_alignment('the dog barks'.split(),'le chien aboie'.split())
-        print result
-
-
     # corpus_path = '../data/training/hansards.36.2'
     # fr_corpus_path = corpus_path + '.f'
     # en_corpus_path = corpus_path + '.e'
-    # corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
     #
-    # ibm = IBM2.uniform(corpus)
-    #
-    # for s in range(1, 21):
-    #     pack_path = corpus_path + '.' + str(s) + '.uniform2.pack'
-    #     if path.isfile(pack_path):
-    #         with open(pack_path, 'r') as stream:
-    #             ibm = IBM2.load(stream)
-    #         print "Loaded %s" % (pack_path)
-    #     else:
-    #         ibm.em_train(corpus, n=1, s=s)
-    #         with open(pack_path, 'w') as stream:
-    #             ibm.dump(stream)
-    #         print "Dumped %s" % (pack_path)
+    # pack_path = corpus_path + '.20.uniform2.pack'
+    # with open(pack_path, 'r') as stream:
+    #     ibm = IBM2.load(stream)
+    #     result = ibm.predict_alignment('cats and whales love the house'.split(),'des chats et des balaines aime le maison'.split())
+    #     print result
+
+    corpus_path = '../data/training/hansards.36.2'
+    fr_corpus_path = corpus_path + '.f'
+    en_corpus_path = corpus_path + '.e'
+    corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
+
+    ibm = IBM2.random()
+    result = ibm.predict_alignment('cats and whales love the house'.split(),
+                                   'des chats et des balaines aime le maison'.split())
+    print result
+
+    for s in range(1, 10):
+        pack_path = corpus_path + '.' + str(s) + '.ibm2.random.pack'
+        next_pack_path = corpus_path + '.' + str(s + 1) + '.ibm2.random.pack'
+        if path.isfile(pack_path) and not path.isfile(next_pack_path):
+            with open(pack_path, 'r') as stream:
+                ibm = IBM2.load(stream)
+            print "Loaded %s" % (pack_path)
+        else:
+            if not path.isfile(pack_path):
+                ibm.em_train(corpus, n=1, s=s)
+
+                result = ibm.predict_alignment('cats and whales love the house'.split(),
+                                               'des chats et des balaines aime le maison'.split())
+                print result
+
+                with open(pack_path, 'w') as stream:
+                    ibm.dump(stream)
+                print "Dumped %s" % (pack_path)
