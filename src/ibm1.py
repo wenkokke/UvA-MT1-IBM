@@ -60,19 +60,19 @@ class IBM:
     def predict_alignment(self, e, f):
         e = [None] + e
         m = len(f) + 1
-        r = []
+        a = []
         for i in range(1, m):
             p_e = {k: v
                    for k, v in self.t.iteritems()
                    if k[0] == f[i - 1] and k[1] in e}
 
             if len(p_e) == 0:
-                r.append(0)
+                a.append(0)
             else:
-                r.append(e.index(
+                a.append(e.index(
                     max(p_e.iteritems(), key=operator.itemgetter(1))[0][1]))
 
-        return r
+        return a
 
     @classmethod
     def random(cls,corpus):
@@ -94,9 +94,10 @@ class IBM:
             stdout.write("\rInit    %6.2f%%" % ((50*k) / float(len(corpus))))
             stdout.flush()
 
-            lens.add((len(e), len(f)))
+            e = [None] + e
+            lens.add((len(e), len(f) + 1))
 
-            for (f, e) in product(f, [None] + e):
+            for (f, e) in product(f, e):
                 aligns[e].add((f, e))
 
         # "Compute initial probabilities for each alignment..."
@@ -119,6 +120,39 @@ def read_corpus(path):
     """Read a file as a list of lists of words."""
     with open(path,'r') as f:
         return [ ln.strip().split() for ln in f ]
+
+
+def run_random(corpus, data_path):
+    ibm = IBM.random(corpus)
+    packs_path = data_path + '/model/ibm1/random/'
+    train_em_and_store(corpus, ibm, packs_path, 20)
+
+
+def run_uniform(corpus, data_path):
+    ibm = IBM.uniform(corpus)
+    packs_path = data_path + '/model/ibm1/uniform/'
+    train_em_and_store(corpus, ibm, packs_path, 20)
+
+
+def train_em_and_store(corpus, ibm, packs_path, n):
+    for s in range(1, n + 1):
+        pack_path = packs_path + corpus_name + '.' + str(s) + '.pack'
+        next_pack_path = packs_path + corpus_name + '.' + str(s + 1) + '.pack'
+        if path.isfile(pack_path) and not path.isfile(next_pack_path):
+            with open(pack_path, 'r') as stream:
+                ibm = IBM.load(stream)
+
+            print_test_example(ibm)
+            print "Loaded %s" % (pack_path)
+        else:
+            if not path.isfile(pack_path):
+                ibm.em_train(corpus, n=1, s=s)
+
+                print_test_example(ibm)
+
+                with open(pack_path, 'w') as stream:
+                    ibm.dump(stream)
+                print "Dumped %s" % (pack_path)
 
 
 def print_test_example(ibm):
@@ -145,27 +179,12 @@ if __name__ == "__main__":
     #     print_test_example(ibm)
 
     data_path = '../data'
-    corpus_name = '10000'
+    corpus_name = 'hansards.36.2'
     corpus_path = data_path + '/training/' + corpus_name
     fr_corpus_path = corpus_path + '.f'
     en_corpus_path = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
-    ibm = IBM.random(corpus)
-    packs_path = data_path + '/model/ibm1/random/'
+    run_random(corpus, data_path)
 
-    for s in range(1, 20):
-        pack_path = packs_path + corpus_name + '.' + str(s) + '.pack'
-        next_pack_path = packs_path + corpus_name + '.' + str(s + 1) + '.pack'
-        if path.isfile(pack_path) and not path.isfile(next_pack_path):
-            with open(pack_path, 'r') as stream:
-                ibm = IBM.load(stream)
-            print_test_example(ibm)
-            print "Loaded %s" % (pack_path)
-        else:
-            if not path.isfile(pack_path):
-                ibm.em_train(corpus, n=1, s=s)
-                print_test_example(ibm)
-                with open(pack_path, 'w') as stream:
-                    ibm.dump(stream)
-                print "Dumped %s" % (pack_path)
+    run_uniform(corpus, data_path)
