@@ -67,7 +67,7 @@ class IBM2:
 
     @classmethod
     def uniform(cls,corpus):
-        return cls.with_generator(corpus, lambda n: 1 / float(n))
+        return cls.with_generator(corpus, lambda n: [1 / float(n)] * n)
 
     @classmethod
     def with_generator(cls,corpus,g):
@@ -115,7 +115,6 @@ def read_corpus(path):
     """Read a file as a list of lists of words."""
     with open(path,'r') as f:
         return [ ln.strip().split() for ln in f ]
-
 
 if __name__ == "__main__":
 
