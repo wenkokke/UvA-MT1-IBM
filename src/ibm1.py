@@ -4,10 +4,11 @@ from msgpack     import pack,unpack
 from random      import random
 from sys         import stdout
 from os          import path
+import operator
 
 import numpy as np
 
-class IBM2:
+class IBM1:
 
     @classmethod
     def load(cls,stream):
@@ -41,7 +42,7 @@ class IBM2:
             e = [None] + e
             q = 1 / float(len(e))
 
-            for i in range(1,m):
+            for i in range(1,m + 1):
 
                 num = [ q * self.t[(f[i - 1], e[j])] for j in range(0,l) ]
                 den = float(sum(num))
@@ -54,6 +55,21 @@ class IBM2:
                     c2[(e[j],)]          += delta
 
         self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
+
+    def predict_alignment(self, e, f):
+        e = [None] + e
+        m = len(f)
+        r = []
+        for i in range(1, m + 1):
+            p_e = {k: v for k, v in self.t.iteritems() if k[0] == f[i - 1] and k[1] in e}
+
+            if len(p_e) == 0:
+                r.append(e.index(None))
+            else:
+                ew = max(p_e.iteritems(), key=operator.itemgetter(1))[0][1]
+                r.append(e.index(ew))
+
+        return r
 
     @classmethod
     def random(cls,corpus):
@@ -103,19 +119,31 @@ def read_corpus(path):
 
 if __name__ == "__main__":
 
-    fr_corpus_path = path.join(path.dirname(__file__),'../data/training/hansards.36.2.f')
-    en_corpus_path = path.join(path.dirname(__file__),'../data/training/hansards.36.2.e')
-    model_path_0   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pack')
-    model_path_1   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass1.pack')
-    model_path_5   = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass5.pack')
-    model_path_10  = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass10.pack')
-    model_path_20  = path.join(path.dirname(__file__),'../data/hansards.36.2.rand.pass20.pack')
-    corpus         = zip(read_corpus(fr_corpus_path),read_corpus(en_corpus_path))
-    corpus         = corpus
+    corpus_path = '../data/training/hansards.36.2'
+    fr_corpus_path = corpus_path + '.f'
+    en_corpus_path = corpus_path + '.e'
+    corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
-    ibm = IBM2.random(corpus)
-    with open(model_path_0,'w') as f:
-        ibm.dump(f)
-    ibm.em_train(corpus,n=1)
-    with open(model_path_1,'w') as f:
-        ibm.dump(f)
+    ibm = IBM1.random()
+    result = ibm.predict_alignment('cats and whales love the house'.split(),
+                                   'des chats et des balaines aime le maison'.split())
+    print result
+
+    for s in range(1, 10):
+        pack_path = corpus_path + '.' + str(s) + '.ibm1.random.pack'
+        next_pack_path = corpus_path + '.' + str(s + 1) + '.ibm1.random.pack'
+        if path.isfile(pack_path) and not path.isfile(next_pack_path):
+            with open(pack_path, 'r') as stream:
+                ibm = IBM1.load(stream)
+            print "Loaded %s" % (pack_path)
+        else:
+            if not path.isfile(pack_path):
+                ibm.em_train(corpus, n=1, s=s)
+
+                result = ibm.predict_alignment('cats and whales love the house'.split(),
+                                               'des chats et des balaines aime le maison'.split())
+                print result
+
+                with open(pack_path, 'w') as stream:
+                    ibm.dump(stream)
+                print "Dumped %s" % (pack_path)
