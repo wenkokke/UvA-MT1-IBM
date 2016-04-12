@@ -163,7 +163,7 @@ def print_test_example(ibm):
 
     print ' '.join(e)
     print ' '.join(f)
-    e = [None] + e
+    e = ['NULL'] + e
     print ' '.join([e[j] for j in a])
 
 
