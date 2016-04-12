@@ -152,19 +152,22 @@ if __name__ == "__main__":
     #     result = ibm.predict_alignment('cats and whales love the house'.split(),'des chats et des balaines aime le maison'.split())
     #     print result
 
-    corpus_path = '../data/training/hansards.36.2'
+    data_path = '../data'
+    corpus_name = '25000'
+    corpus_path = data_path + '/training/' + corpus_name
     fr_corpus_path = corpus_path + '.f'
     en_corpus_path = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
     ibm = IBM2.random()
+    packs_path = data_path + '/ibm2/random/'
     result = ibm.predict_alignment('cats and whales love the house'.split(),
                                    'des chats et des balaines aime le maison'.split())
     print result
 
     for s in range(1, 10):
-        pack_path = corpus_path + '.' + str(s) + '.ibm2.random.pack'
-        next_pack_path = corpus_path + '.' + str(s + 1) + '.ibm2.random.pack'
+        pack_path = packs_path + corpus_name + '.' + str(s) + '.pack'
+        next_pack_path = packs_path + corpus_name + '.' + str(s + 1) + '.pack'
         if path.isfile(pack_path) and not path.isfile(next_pack_path):
             with open(pack_path, 'r') as stream:
                 ibm = IBM2.load(stream)
