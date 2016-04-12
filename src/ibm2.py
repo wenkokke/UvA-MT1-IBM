@@ -160,7 +160,7 @@ if __name__ == "__main__":
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
     ibm = IBM2.random()
-    packs_path = data_path + '/ibm2/random/'
+    packs_path = data_path + '/model/ibm2/random/'
     result = ibm.predict_alignment('cats and whales love the house'.split(),
                                    'des chats et des balaines aime le maison'.split())
     print result
