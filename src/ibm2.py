@@ -5,6 +5,7 @@ from random      import random
 from sys         import stdout
 from os          import path
 
+import operator
 import numpy as np
 
 class IBM2:
@@ -43,7 +44,7 @@ class IBM2:
             m = len(f)
             e = [None] + e
 
-            for i in range(1,m):
+            for i in range(1,m + 1):
 
                 num = [ self.q[(j,i,l,m)] * self.t[(f[i - 1], e[j])]
                         for j in range(0,l) ]
@@ -60,6 +61,23 @@ class IBM2:
 
         self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
         self.q = defaultdict(float,{k: v / c4[k[1:]] for k,v in c3.iteritems() if v > 0.0})
+
+    def predict_alignment(self, e, f):
+        l = len(e)
+        m = len(f)
+        r = []
+        for i in range(1, m + 1):
+
+            es = {k: v for k, v in self.t.iteritems() if k[0] == f[i - 1] and k[1] in e}
+            map_dict(lambda x, k: x * self.q[(e.index(k[1]), i, l, m)], es)
+
+            if len(es) == 0:
+                r.append(0)
+            else:
+                ew = max(es.iteritems(), key=operator.itemgetter(1))[0][1]
+                r.append(e.index(ew) + 1)
+
+        return r
 
     @classmethod
     def random(cls,corpus):
@@ -110,6 +128,11 @@ class IBM2:
         print "\rInit     100.00%"
 
         return cls(t,q)
+
+
+def map_dict(f,d):
+    for k, v in d.iteritems():
+        d[k] = f(v, k)
 
 
 def read_corpus(path):

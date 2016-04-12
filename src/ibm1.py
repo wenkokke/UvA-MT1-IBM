@@ -4,6 +4,7 @@ from msgpack     import pack,unpack
 from random      import random
 from sys         import stdout
 from os          import path
+import operator
 
 import numpy as np
 
@@ -41,7 +42,7 @@ class IBM2:
             e = [None] + e
             q = 1 / float(len(e))
 
-            for i in range(1,m):
+            for i in range(1,m + 1):
 
                 num = [ q * self.t[(f[i - 1], e[j])] for j in range(0,l) ]
                 den = float(sum(num))
@@ -54,6 +55,22 @@ class IBM2:
                     c2[(e[j],)]          += delta
 
         self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
+
+    def predict_alignment(self,e,f):
+        l = len(e)
+        m = len(f)
+        r = []
+        for i in range(1, m + 1):
+
+            es = {k: v for k, v in self.t.iteritems() if k[0] == f[i - 1] and k[1] in e}
+
+            if len(es) == 0:
+                r.append(0)
+            else:
+                ew = max(es.iteritems(), key=operator.itemgetter(1))[0][1]
+                r.append(e.index(ew) + 1)
+
+        return r
 
     @classmethod
     def random(cls,corpus):
