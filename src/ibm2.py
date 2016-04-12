@@ -1,3 +1,5 @@
+# coding: utf-8
+
 from collections import defaultdict
 from itertools   import chain,product
 from msgpack     import pack,unpack
@@ -9,7 +11,7 @@ import operator
 import operator
 import numpy as np
 
-class IBM2:
+class IBM:
 
     @classmethod
     def load(cls,stream):
@@ -82,8 +84,9 @@ class IBM2:
         return a
 
     @classmethod
-    def random(cls):
-        return IBM2(defaultdict(random), defaultdict(random))
+    def random(cls, corpus):
+        return cls.with_generator(
+            corpus, lambda n: np.random.dirichlet(np.ones(n), size=1)[0])
 
     @classmethod
     def uniform(cls,corpus):
@@ -97,12 +100,14 @@ class IBM2:
         aligns = defaultdict(set)
 
         for k, (f, e) in enumerate(corpus):
-            stdout.write("\rInit    %6.2f%%" % ((33*k) / float(len(corpus))))
+
+            stdout.write("\rInit    %6.2f%%" % ((33 * k) / float(len(corpus))))
             stdout.flush()
 
-            lens.add((len(e), len(f)))
+            e = [None] + e
+            lens.add((len(e), len(f) + 1))
 
-            for (f, e) in product(f, [None] + e):
+            for (f, e) in product(f, e):
                 aligns[e].add((f, e))
 
         # "Compute initial probabilities for each alignment..."
@@ -122,7 +127,7 @@ class IBM2:
             stdout.write("\rInit    %6.2f%%" % (66 + ((33*k) / float(len(lens)))))
             stdout.flush()
 
-            for i in range(1,m + 1):
+            for i in range(1,m):
                 p_values = g(l)
                 for j in range(0,l):
                     q[(j,i,l,m)] = p_values[j]
@@ -131,15 +136,56 @@ class IBM2:
         return cls(t,q)
 
 
-def map_dict(f,d):
-    for k, v in d.iteritems():
-        d[k] = f(v, k)
-
-
 def read_corpus(path):
     """Read a file as a list of lists of words."""
     with open(path,'r') as f:
         return [ ln.strip().split() for ln in f ]
+
+
+def run_random(corpus, data_path):
+    ibm = IBM.random(corpus)
+    packs_path = data_path + '/model/ibm2/random/'
+    train_em_and_store(corpus, ibm, packs_path, 20)
+
+
+def run_uniform(corpus, data_path):
+    ibm = IBM.uniform(corpus)
+    packs_path = data_path + '/model/ibm2/uniform/'
+    train_em_and_store(corpus, ibm, packs_path, 20)
+
+
+def train_em_and_store(corpus, ibm, packs_path, n):
+    for s in range(1, n + 1):
+        pack_path = packs_path + corpus_name + '.' + str(s) + '.pack'
+        next_pack_path = packs_path + corpus_name + '.' + str(s + 1) + '.pack'
+        if path.isfile(pack_path) and not path.isfile(next_pack_path):
+            with open(pack_path, 'r') as stream:
+                ibm = IBM.load(stream)
+
+            print_test_example(ibm)
+            print "Loaded %s" % (pack_path)
+        else:
+            if not path.isfile(pack_path):
+                ibm.em_train(corpus, n=1, s=s)
+
+                print_test_example(ibm)
+
+                with open(pack_path, 'w') as stream:
+                    ibm.dump(stream)
+                print "Dumped %s" % (pack_path)
+
+
+def print_test_example(ibm):
+    e = 'the government is doing what the Canadians want . '.split()
+    f = 'le gouvernement fait ce que veulent les Canadiens .'.split()
+¯
+    a = ibm.predict_alignment(e,f)
+
+    print ' '.join(e)
+    print ' '.join(f)
+    e = ['NULL'] + e
+    print ' '.join([e[j] for j in a])
+
 
 if __name__ == "__main__":
 
@@ -149,35 +195,16 @@ if __name__ == "__main__":
     #
     # pack_path = corpus_path + '.20.uniform2.pack'
     # with open(pack_path, 'r') as stream:
-    #     ibm = IBM2.load(stream)
-    #     result = ibm.predict_alignment('cats and whales love the house'.split(),'des chats et des balaines aime le maison'.split())
-    #     print result
+    #     ibm = IBM.load(stream)
+    #     print_test_example(ibm)
 
     data_path = '../data'
-    corpus_name = '10000'
+    corpus_name = 'hansards.36.2'
     corpus_path = data_path + '/training/' + corpus_name
     fr_corpus_path = corpus_path + '.f'
     en_corpus_path = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
-    ibm = IBM2.random()
-    packs_path = data_path + '/model/ibm2/random/'
+    run_random(corpus, data_path)
 
-    for s in range(1, 10):
-        pack_path = packs_path + corpus_name + '.' + str(s) + '.pack'
-        next_pack_path = packs_path + corpus_name + '.' + str(s + 1) + '.pack'
-        if path.isfile(pack_path) and not path.isfile(next_pack_path):
-            with open(pack_path, 'r') as stream:
-                ibm = IBM2.load(stream)
-            print "Loaded %s" % (pack_path)
-        else:
-            if not path.isfile(pack_path):
-                ibm.em_train(corpus, n=1, s=s)
-
-                result = ibm.predict_alignment('certainly , something like that we can all agree with .'.split(),
-                                               'ce est certainement un objectif louable . '.split())
-                print result
-
-                with open(pack_path, 'w') as stream:
-                    ibm.dump(stream)
-                print "Dumped %s" % (pack_path)
+    run_uniform(corpus, data_path)
