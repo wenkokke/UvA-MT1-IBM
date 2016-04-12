@@ -41,11 +41,11 @@ class IBM2:
                 stdout.write("\rPass %2d: %6.2f%%" % (passnum, (100*k) / float(len(corpus))))
                 stdout.flush()
 
-            l = len(e)
-            m = len(f)
             e = [None] + e
+            l = len(e)
+            m = len(f) + 1
 
-            for i in range(1,m + 1):
+            for i in range(1,m):
 
                 num = [ self.q[(j,i,l,m)] * self.t[(f[i - 1], e[j])]
                         for j in range(0,l) ]
@@ -66,17 +66,18 @@ class IBM2:
     def predict_alignment(self,e,f):
         e = [None] + e
         l = len(e)
-        m = len(f)
+        m = len(f) + 1
         r = []
-        for i in range(1, m + 1):
-            p_e = {k: v for k, v in self.t.iteritems() if k[0] == f[i - 1] and k[1] in e}
-            map_dict(lambda x, k: x * self.q[(e.index(k[1]), i, l, m)], p_e)
+        for i in range(1, m):
+            p_e = {k: v * self.q[(e.index(k[1]), i, l, m)]
+                   for k, v in self.t.iteritems()
+                   if k[0] == f[i - 1] and k[1] in e}
 
             if len(p_e) == 0:
-                r.append(e.index(None))
+                r.append(0)
             else:
-                ew = max(p_e.iteritems(), key=operator.itemgetter(1))[0][1]
-                r.append(e.index(ew))
+                r.append(e.index(
+                    max(p_e.iteritems(), key=operator.itemgetter(1))[0][1]))
 
         return r
 
@@ -161,9 +162,6 @@ if __name__ == "__main__":
 
     ibm = IBM2.random()
     packs_path = data_path + '/model/ibm2/random/'
-    result = ibm.predict_alignment('cats and whales love the house'.split(),
-                                   'des chats et des balaines aime le maison'.split())
-    print result
 
     for s in range(1, 10):
         pack_path = packs_path + corpus_name + '.' + str(s) + '.pack'
@@ -176,8 +174,8 @@ if __name__ == "__main__":
             if not path.isfile(pack_path):
                 ibm.em_train(corpus, n=1, s=s)
 
-                result = ibm.predict_alignment('cats and whales love the house'.split(),
-                                               'des chats et des balaines aime le maison'.split())
+                result = ibm.predict_alignment('certainly , something like that we can all agree with .'.split(),
+                                               'ce est certainement un objectif louable . '.split())
                 print result
 
                 with open(pack_path, 'w') as stream:
