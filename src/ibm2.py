@@ -131,15 +131,23 @@ class IBM2:
         return cls(t,q)
 
 
-def map_dict(f,d):
-    for k, v in d.iteritems():
-        d[k] = f(v, k)
-
-
 def read_corpus(path):
     """Read a file as a list of lists of words."""
     with open(path,'r') as f:
         return [ ln.strip().split() for ln in f ]
+
+
+def test(ibm):
+    e = 'the government is doing what the Canadians want . '.split()
+    f = 'le gouvernement fait ce que veulent les Canadiens .'.split()
+
+    a = ibm.predict_alignment(e,f)
+
+    print ' '.join(e)
+    print ' '.join(f)
+    e = [None] + e
+    print ' '.join([e[j] for j in a])
+
 
 if __name__ == "__main__":
 
@@ -150,8 +158,7 @@ if __name__ == "__main__":
     # pack_path = corpus_path + '.20.uniform2.pack'
     # with open(pack_path, 'r') as stream:
     #     ibm = IBM2.load(stream)
-    #     result = ibm.predict_alignment('cats and whales love the house'.split(),'des chats et des balaines aime le maison'.split())
-    #     print result
+    #     print_test_example(ibm)
 
     data_path = '../data'
     corpus_name = '10000'
@@ -163,20 +170,20 @@ if __name__ == "__main__":
     ibm = IBM2.random()
     packs_path = data_path + '/model/ibm2/random/'
 
-    for s in range(1, 10):
+    for s in range(1, 20):
         pack_path = packs_path + corpus_name + '.' + str(s) + '.pack'
         next_pack_path = packs_path + corpus_name + '.' + str(s + 1) + '.pack'
         if path.isfile(pack_path) and not path.isfile(next_pack_path):
             with open(pack_path, 'r') as stream:
                 ibm = IBM2.load(stream)
+
+            test(ibm)
             print "Loaded %s" % (pack_path)
         else:
             if not path.isfile(pack_path):
                 ibm.em_train(corpus, n=1, s=s)
 
-                result = ibm.predict_alignment('certainly , something like that we can all agree with .'.split(),
-                                               'ce est certainement un objectif louable . '.split())
-                print result
+                test(ibm)
 
                 with open(pack_path, 'w') as stream:
                     ibm.dump(stream)

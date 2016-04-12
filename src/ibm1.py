@@ -8,7 +8,7 @@ import operator
 
 import numpy as np
 
-class IBM1:
+class IBM:
 
     @classmethod
     def load(cls,stream):
@@ -21,9 +21,9 @@ class IBM1:
     def __init__(self, t):
         self.t = t
 
-    def em_train(self,corpus,n=10):
-        for k in range(1,n+1):
-            self.em_iter(corpus,passnum=k)
+    def em_train(self,corpus,n=10,s=1):
+        for k in range(s, n + s):
+            self.em_iter(corpus, passnum=k)
             print("\rPass %2d: 100.00%%" % k)
 
     def em_iter(self,corpus,passnum=1):
@@ -59,16 +59,18 @@ class IBM1:
 
     def predict_alignment(self, e, f):
         e = [None] + e
-        m = len(f)
+        m = len(f) + 1
         r = []
-        for i in range(1, m + 1):
-            p_e = {k: v for k, v in self.t.iteritems() if k[0] == f[i - 1] and k[1] in e}
+        for i in range(1, m):
+            p_e = {k: v
+                   for k, v in self.t.iteritems()
+                   if k[0] == f[i - 1] and k[1] in e}
 
             if len(p_e) == 0:
-                r.append(e.index(None))
+                r.append(0)
             else:
-                ew = max(p_e.iteritems(), key=operator.itemgetter(1))[0][1]
-                r.append(e.index(ew))
+                r.append(e.index(
+                    max(p_e.iteritems(), key=operator.itemgetter(1))[0][1]))
 
         return r
 
@@ -118,33 +120,52 @@ def read_corpus(path):
     with open(path,'r') as f:
         return [ ln.strip().split() for ln in f ]
 
+
+def print_test_example(ibm):
+    e = 'the government is doing what the Canadians want . '.split()
+    f = 'le gouvernement fait ce que veulent les Canadiens .'.split()
+
+    a = ibm.predict_alignment(e,f)
+
+    print ' '.join(e)
+    print ' '.join(f)
+    e = [None] + e
+    print ' '.join([e[j] for j in a])
+
+
 if __name__ == "__main__":
 
-    corpus_path = '../data/training/hansards.36.2'
+    # corpus_path = '../data/training/hansards.36.2'
+    # fr_corpus_path = corpus_path + '.f'
+    # en_corpus_path = corpus_path + '.e'
+    #
+    # pack_path = corpus_path + '.20.uniform2.pack'
+    # with open(pack_path, 'r') as stream:
+    #     ibm = IBM.load(stream)
+    #     print_test_example(ibm)
+
+    data_path = '../data'
+    corpus_name = '10000'
+    corpus_path = data_path + '/training/' + corpus_name
     fr_corpus_path = corpus_path + '.f'
     en_corpus_path = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
-    ibm = IBM1.random()
-    result = ibm.predict_alignment('cats and whales love the house'.split(),
-                                   'des chats et des balaines aime le maison'.split())
-    print result
+    ibm = IBM.random(corpus)
+    packs_path = data_path + '/model/ibm1/random/'
 
-    for s in range(1, 10):
-        pack_path = corpus_path + '.' + str(s) + '.ibm1.random.pack'
-        next_pack_path = corpus_path + '.' + str(s + 1) + '.ibm1.random.pack'
+    for s in range(1, 20):
+        pack_path = packs_path + corpus_name + '.' + str(s) + '.pack'
+        next_pack_path = packs_path + corpus_name + '.' + str(s + 1) + '.pack'
         if path.isfile(pack_path) and not path.isfile(next_pack_path):
             with open(pack_path, 'r') as stream:
-                ibm = IBM1.load(stream)
+                ibm = IBM.load(stream)
+            print_test_example(ibm)
             print "Loaded %s" % (pack_path)
         else:
             if not path.isfile(pack_path):
                 ibm.em_train(corpus, n=1, s=s)
-
-                result = ibm.predict_alignment('cats and whales love the house'.split(),
-                                               'des chats et des balaines aime le maison'.split())
-                print result
-
+                print_test_example(ibm)
                 with open(pack_path, 'w') as stream:
                     ibm.dump(stream)
                 print "Dumped %s" % (pack_path)
