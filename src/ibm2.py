@@ -174,8 +174,8 @@ def main(corpus, ibm_init, pack_path, corpus_name, n):
     ibm = None
 
     for s in range(0, n + 1):
-        curr_pack_path = pack_path + corpus_name + '.' + str(s    ) + '.pack'
-        next_pack_path = pack_path + corpus_name + '.' + str(s + 1) + '.pack'
+        curr_pack_path = path.join(pack_path , corpus_name + '.' + str(s  ) + '.pack')
+        next_pack_path = path.join(pack_path , corpus_name + '.' + str(s+1) + '.pack')
 
         if not path.isfile(next_pack_path):
 
