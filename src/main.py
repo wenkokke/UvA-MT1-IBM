@@ -54,6 +54,9 @@ def run(corpus, ibm_cls, ibm_init, packs_path, corpus_name, n):
         curr_pack_path = path.join(packs_path , corpus_name + '.' + str(s  ) + '.pack')
         next_pack_path = path.join(packs_path , corpus_name + '.' + str(s+1) + '.pack')
 
+        if s == n and path.isfile(curr_pack_path):
+            continue
+
         if not path.isfile(next_pack_path) or not path.isfile(curr_pack_path):
 
             if path.isfile(curr_pack_path):
@@ -71,7 +74,8 @@ def run(corpus, ibm_cls, ibm_init, packs_path, corpus_name, n):
                     ibm.dump(stream)
                     print "Dumped %s" % (curr_pack_path)
 
-    build_results(corpus, ibm_cls, packs_path, corpus_name, n)
+    if ibm is not None:
+        build_results(corpus, ibm_cls, packs_path, corpus_name, n)
 
 
 def print_test_example(ibm):
@@ -120,7 +124,7 @@ def build_results(corpus, ibm_cls, packs_path, corpus_name, n):
 if __name__ == "__main__":
 
     data_path   = path.join(path.dirname(__file__), '..', 'data')
-    corpus_name = 'small' # hansards.36.2
+    corpus_name = 'hansards.36.2' # hansards.36.2
     corpus_path = path.join(data_path, 'training', corpus_name)
     fr_corpus_path   = corpus_path + '.f'
     en_corpus_path   = corpus_path + '.e'
@@ -128,12 +132,12 @@ if __name__ == "__main__":
     en_vocabulary_len = len(set(itertools.chain(*en_corpus)))
     corpus = zip(read_corpus(fr_corpus_path), en_corpus)
 
-    ibm = ibm2.IBM
-
-    run(corpus, ibm, lambda: ibm.uniform(corpus), path.join(data_path,'model','ibm2','uniform'), corpus_name, 20)
-    run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random1'), corpus_name, 20)
-    run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random2'), corpus_name, 20)
-    run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random3'), corpus_name, 20)
+    # ibm = ibm2.IBM
+    #
+    # run(corpus, ibm, lambda: ibm.uniform(corpus), path.join(data_path,'model','ibm2','uniform'), corpus_name, 20)
+    # run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random1'), corpus_name, 20)
+    # run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random2'), corpus_name, 20)
+    # run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random3'), corpus_name, 20)
 
     ibm = ibm1.IBM
 
