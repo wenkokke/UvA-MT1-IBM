@@ -57,22 +57,20 @@ class IBM:
 
         self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
 
-    def predict_alignment(self, e, f):
-        e = [None] + e
+
+    def predict_alignment(self,e,f):
+        l = len(e) + 1
         m = len(f) + 1
-        a = []
-        for i in range(1, m):
-            p_e = {k: v
-                   for k, v in self.t.iteritems()
-                   if k[0] == f[i - 1] and k[1] in e}
+        e = [None] + e
 
-            if len(p_e) == 0:
-                a.append(0)
-            else:
-                a.append(e.index(
-                    max(p_e.iteritems(), key=operator.itemgetter(1))[0][1]))
-
-        return a
+        # for each french word:
+        #  - compute a list of indices j of words in the english sentence,
+        #    together with the probability of e[j] being aligned with f[i-1]
+        #  - take the index j for the word with the _highest_ probability;
+        return [
+            max([ (j, self.t[(f[i - 1], e[j])]) for j in range(0,l) ]
+                , key = lambda x: x[1])[0]
+            for i in range(1,m) ]
 
     @classmethod
     def random(cls,corpus):
@@ -116,47 +114,42 @@ class IBM:
         return cls(t)
 
 
+
 def read_corpus(path):
     """Read a file as a list of lists of words."""
     with open(path,'r') as f:
         return [ ln.strip().split() for ln in f ]
 
 
-def run_random(corpus, data_path):
-    ibm = IBM.random(corpus)
-    packs_path = data_path + '/model/ibm1/random/'
-    train_em_and_store(corpus, ibm, packs_path, 20)
+def main(corpus, ibm_init, pack_path, corpus_name, n):
 
+    ibm = None
 
-def run_uniform(corpus, data_path):
-    ibm = IBM.uniform(corpus)
-    packs_path = data_path + '/model/ibm1/uniform/'
-    train_em_and_store(corpus, ibm, packs_path, 20)
+    for s in range(0, n):
+        curr_pack_path = path.join(pack_path , corpus_name + '.' + str(s  ) + '.pack')
+        next_pack_path = path.join(pack_path , corpus_name + '.' + str(s+1) + '.pack')
 
+        if not path.isfile(next_pack_path):
 
-def train_em_and_store(corpus, ibm, packs_path, n):
-    for s in range(1, n + 1):
-        pack_path = packs_path + corpus_name + '.' + str(s) + '.pack'
-        next_pack_path = packs_path + corpus_name + '.' + str(s + 1) + '.pack'
-        if path.isfile(pack_path) and not path.isfile(next_pack_path):
-            with open(pack_path, 'r') as stream:
-                ibm = IBM.load(stream)
+            if path.isfile(curr_pack_path):
+                with open(curr_pack_path, 'r') as stream:
+                    ibm = IBM.load(stream)
+                    print "Loaded %s" % (curr_pack_path)
 
-            print_test_example(ibm)
-            print "Loaded %s" % (pack_path)
-        else:
-            if not path.isfile(pack_path):
+            else:
+                if ibm is None:
+                    ibm = ibm_init(corpus)
                 ibm.em_train(corpus, n=1, s=s)
 
-                print_test_example(ibm)
-
-                with open(pack_path, 'w') as stream:
+                with open(curr_pack_path, 'w') as stream:
                     ibm.dump(stream)
-                print "Dumped %s" % (pack_path)
+                    print "Dumped %s" % (curr_pack_path)
+
+            print_test_example(ibm)
 
 
 def print_test_example(ibm):
-    e = 'the government is doing what the Canadians want . '.split()
+    e = 'the government is doing what the Canadians want .'.split()
     f = 'le gouvernement fait ce que veulent les Canadiens .'.split()
 
     a = ibm.predict_alignment(e,f)
@@ -169,22 +162,13 @@ def print_test_example(ibm):
 
 if __name__ == "__main__":
 
-    # corpus_path = '../data/training/hansards.36.2'
-    # fr_corpus_path = corpus_path + '.f'
-    # en_corpus_path = corpus_path + '.e'
-    #
-    # pack_path = corpus_path + '.20.uniform2.pack'
-    # with open(pack_path, 'r') as stream:
-    #     ibm = IBM.load(stream)
-    #     print_test_example(ibm)
-
-    data_path = '../data'
-    corpus_name = 'hansards.36.2'
-    corpus_path = data_path + '/training/' + corpus_name
-    fr_corpus_path = corpus_path + '.f'
-    en_corpus_path = corpus_path + '.e'
+    data_path   = 'data'
+    corpus_name = '10000'
+    corpus_path = path.join(path.dirname(__file__), '..',
+                                 data_path, 'training', corpus_name)
+    fr_corpus_path   = corpus_path + '.f'
+    en_corpus_path   = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
-    run_random(corpus, data_path)
-
-    run_uniform(corpus, data_path)
+    main(corpus, IBM.uniform, path.join(data_path,'model','ibm1','unif'), corpus_name, 20)
+    main(corpus, IBM.random , path.join(data_path,'model','ibm1','rand'), corpus_name, 20)

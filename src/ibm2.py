@@ -173,7 +173,7 @@ def main(corpus, ibm_init, pack_path, corpus_name, n):
 
     ibm = None
 
-    for s in range(0, n + 1):
+    for s in range(0, n):
         curr_pack_path = path.join(pack_path , corpus_name + '.' + str(s  ) + '.pack')
         next_pack_path = path.join(pack_path , corpus_name + '.' + str(s+1) + '.pack')
 
