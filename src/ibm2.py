@@ -148,24 +148,28 @@ def read_corpus(path):
 
 
 def main(corpus, ibm, packs_path, n):
+
     for s in range(1, n + 1):
+
         pack_path      = packs_path + corpus_name + '.' + str(s) + '.pack'
         next_pack_path = packs_path + corpus_name + '.' + str(s + 1) + '.pack'
+
         if path.isfile(pack_path) and not path.isfile(next_pack_path):
+
             with open(pack_path, 'r') as stream:
                 ibm = IBM.load(stream)
 
             print_test_example(ibm)
             print "Loaded %s" % (pack_path)
-        else:
-            if not path.isfile(pack_path):
-                ibm.em_train(corpus, n=1, s=s)
 
-                print_test_example(ibm)
+        elif not path.isfile(pack_path):
 
-                # with open(pack_path, 'w') as stream:
-                #     ibm.dump(stream)
-                # print "Dumped %s" % (pack_path)
+            ibm.em_train(corpus, n=1, s=s)
+            print_test_example(ibm)
+
+            with open(pack_path, 'w') as stream:
+                ibm.dump(stream)
+                print "Dumped %s" % (pack_path)
 
 
 def print_test_example(ibm):
