@@ -1,3 +1,5 @@
+# coding: utf-8
+
 from collections import defaultdict
 from itertools   import chain,product
 from msgpack     import pack,unpack
@@ -26,8 +28,9 @@ class IBM:
 
     def em_train(self,corpus,n=10, s=1):
         for k in range(s,n+s):
-            self.em_iter(corpus,passnum=k)
+            l = self.em_iter(corpus,passnum=k)
             print("\rPass %2d: 100.00%%" % k)
+            print("Likelihood: %.5f" % l)
 
     def em_iter(self,corpus,passnum=1):
 
@@ -36,7 +39,7 @@ class IBM:
         c3 = defaultdict(float) # wj aligned with wi
         c4 = defaultdict(float) # wi aligned with anything
 
-        corpus_log_likelihood = 0.0
+        likelihood = 0.0
 
         for k, (f, e) in enumerate(corpus):
 
@@ -48,15 +51,11 @@ class IBM:
             m = len(f) + 1
             e = [None] + e
 
-            sentence_likelihood = 0.0
-
             for i in range(1,m):
 
                 num = [ self.q[(j,i,l,m)] * self.t[(f[i - 1], e[j])]
                         for j in range(0,l) ]
                 den = float(sum(num))
-
-                p = 1.0
 
                 for j in range(0,l):
 
@@ -67,22 +66,10 @@ class IBM:
                     c3[(j,i,l,m)]        += delta
                     c4[(i,l,m)]          += delta
 
-                    pc1 = c1[(f[i - 1], e[j])]
-                    pc2 = c2[(e[j],)]
-                    pc3 = c3[(j,i,l,m)]
-                    pc4 = c4[(i,l,m)]
-
-                    p *= (pc1 / pc2) * (pc3 / pc4)
-
-                sentence_likelihood += p
-
-            if sentence_likelihood > 0.0:
-                corpus_log_likelihood += math.log(sentence_likelihood)
-
-        print corpus_log_likelihood
-
         self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
         self.q = defaultdict(float,{k: v / c4[k[1:]] for k,v in c3.iteritems() if v > 0.0})
+
+        return likelihood
 
     def predict_alignment(self,e,f):
         l = len(e) + 1
