@@ -73,7 +73,7 @@ class IBM:
                     c2[(e[j],)]          += delta
 
         self.t = defaultdict(float,{
-            k: (v + self.param.n) / (c2[k[1:]] + (n * self.param.v))
+            k: (v + self.param.n) / (c2[k[1:]] + (self.param.n * self.param.v))
             for k,v in c1.iteritems() if v > 0.0 })
 
 
