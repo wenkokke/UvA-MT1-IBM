@@ -27,6 +27,13 @@ class Results:
     def save_plot_log_likelihood(self, packs_path, corpus_name):
         plt.plot(self.log_likelihoods)
         plt.savefig(path.join(packs_path, corpus_name + '.log_likelihood.png'))
+        plt.clf()
+
+    def log_likelihood(self, s, log_likelihood):
+        if len(self.log_likelihoods) > s:
+            self.log_likelihoods[s] = log_likelihood
+        else:
+            self.log_likelihoods.append(log_likelihood)
 
 
 def read_corpus(path):
@@ -55,7 +62,7 @@ def run(corpus, ibm_cls, ibm_init, packs_path, corpus_name, n):
 
             else:
                 if ibm is None:
-                    ibm = ibm_init(corpus)
+                    ibm = ibm_init()
                 else:
                     ibm.em_train(corpus, n=1, s=s)
 
@@ -101,7 +108,7 @@ def build_results(corpus, ibm_cls, packs_path, corpus_name, n):
         with open(pack_path, 'r') as stream:
             ibm = ibm_cls.load(stream)
             print "Loaded %s" % (pack_path)
-            results.log_likelihoods.append(ibm.log_likelihood(corpus))
+            results.log_likelihood(s, ibm.log_likelihood(corpus))
 
         with open(results_path, 'w') as stream:
             results.dump(stream)
@@ -120,16 +127,15 @@ if __name__ == "__main__":
 
     ibm = ibm2.IBM
 
-    # run(corpus, ibm, ibm.uniform, path.join(data_path,'model','ibm2','uniform'), corpus_name, 20)
-    # run(corpus, ibm, ibm.random , path.join(data_path,'model','ibm2','random1'), corpus_name, 20)
-    # run(corpus, ibm, ibm.random, path.join(data_path,'model','ibm2','random2'), corpus_name, 20)
-    run(corpus, ibm, ibm.random, path.join(data_path,'model','ibm2','random3'), corpus_name, 20)
+    # run(corpus, ibm, lambda: ibm.uniform(corpus), path.join(data_path,'model','ibm2','uniform'), corpus_name, 20)
+    # run(corpus, ibm, lambda: ibm.random(corpus) , path.join(data_path,'model','ibm2','random1'), corpus_name, 20)
+    # run(corpus, ibm, lambda: ibm.random(corpus) , path.join(data_path,'model','ibm2','random2'), corpus_name, 20)
+    # run(corpus, ibm, lambda: ibm.random(corpus) , path.join(data_path,'model','ibm2','random3'), corpus_name, 20)
 
-    # ibm = ibm1.IBM
+    ibm = ibm1.IBM
 
-    # run(corpus, ibm, ibm.uniform, path.join(data_path,'model','ibm1','uniform'), corpus_name, 20)
-    # run(corpus, ibm, ibm.random , path.join(data_path,'model','ibm1','random1'), corpus_name, 20)
-    # run(corpus, ibm, ibm.random, path.join(data_path,'model','ibm1','random2'), corpus_name, 20)
-    # run(corpus, ibm, ibm.random, path.join(data_path,'model','ibm1','random3'), corpus_name, 20)
-
-    #build_results(corpus, path.join(data_path, 'model', 'ibm2', 'uniform'), corpus_name, 20)
+    param = ibm1.Param(q0=1000)
+    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random1+100'), corpus_name, 20)
+    param = ibm1.Param(n=0.01)
+    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random1+n=0.01'), corpus_name,
+         20)

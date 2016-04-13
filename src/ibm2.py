@@ -1,18 +1,14 @@
 # coding: utf-8
 import os
 from collections import defaultdict
-from itertools   import chain,product
+from itertools   import product
 
-import time
 from msgpack     import pack,unpack
-from random      import random
 from sys         import stdout
-from os          import path
 
-import matplotlib.pyplot as plt
 import math
-import operator
 import numpy as np
+import time
 
 
 class IBM:
