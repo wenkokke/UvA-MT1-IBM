@@ -1,3 +1,5 @@
+# coding: utf-8
+
 from collections import defaultdict
 from itertools   import chain,product
 from msgpack     import pack,unpack
@@ -197,7 +199,7 @@ def train_em_and_store(corpus, ibm, packs_path, n):
 def print_test_example(ibm):
     e = 'the government is doing what the Canadians want .'.split()
     f = 'le gouvernement fait ce que veulent les Canadiens .'.split()
-
+¯
     a = ibm.predict_alignment(e,f)
 
     print ' '.join(e)
