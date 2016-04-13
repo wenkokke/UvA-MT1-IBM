@@ -6,11 +6,12 @@ from msgpack     import pack,unpack
 from random      import random
 from sys         import stdout
 from os          import path
-import operator
+
 
 import math
 import operator
 import numpy as np
+
 
 class IBM:
 
@@ -28,8 +29,10 @@ class IBM:
 
     def em_train(self,corpus,n=10, s=1):
         for k in range(s,n+s):
-            self.em_iter(corpus,passnum=k)
+            l = self.em_iter(corpus,passnum=k)
             print("\rPass %2d: 100.00%%" % k)
+            print("Likelihood: %.5f" % l)
+
 
     def em_iter(self,corpus,passnum=1):
 
@@ -37,8 +40,6 @@ class IBM:
         c2 = defaultdict(float) # ei aligned with anything
         c3 = defaultdict(float) # wj aligned with wi
         c4 = defaultdict(float) # wi aligned with anything
-
-        corpus_log_likelihood = 0.0
 
         for k, (f, e) in enumerate(corpus):
 
@@ -50,15 +51,11 @@ class IBM:
             m = len(f) + 1
             e = [None] + e
 
-            sentence_likelihood = 0.0
-
             for i in range(1,m):
 
                 num = [ self.q[(j,i,l,m)] * self.t[(f[i - 1], e[j])]
                         for j in range(0,l) ]
                 den = float(sum(num))
-
-                p = 1.0
 
                 for j in range(0,l):
 
@@ -69,22 +66,9 @@ class IBM:
                     c3[(j,i,l,m)]        += delta
                     c4[(i,l,m)]          += delta
 
-                    pc1 = c1[(f[i - 1], e[j])]
-                    pc2 = c2[(e[j],)]
-                    pc3 = c3[(j,i,l,m)]
-                    pc4 = c4[(i,l,m)]
-
-                    p *= (pc1 / pc2) * (pc3 / pc4)
-
-                sentence_likelihood += p
-
-            if sentence_likelihood > 0.0:
-                corpus_log_likelihood += math.log(sentence_likelihood)
-
-        print corpus_log_likelihood
-
         self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
         self.q = defaultdict(float,{k: v / c4[k[1:]] for k,v in c3.iteritems() if v > 0.0})
+
 
     def predict_alignment(self,e,f):
         l = len(e) + 1
@@ -199,7 +183,7 @@ def train_em_and_store(corpus, ibm, packs_path, n):
 def print_test_example(ibm):
     e = 'the government is doing what the Canadians want .'.split()
     f = 'le gouvernement fait ce que veulent les Canadiens .'.split()
-¯
+
     a = ibm.predict_alignment(e,f)
 
     print ' '.join(e)
@@ -219,15 +203,13 @@ if __name__ == "__main__":
     #     ibm = IBM.load(stream)
     #     print_test_example(ibm)
 
-    data_path = '../data'
-    corpus_name = 'small'
-    corpus_path = data_path + '/training/' + corpus_name
-    fr_corpus_path = corpus_path + '.f'
-    en_corpus_path = corpus_path + '.e'
+    corpus_data_path = 'data'
+    corpus_name      = 'small'
+    corpus_path      = path.join(path.dirname(__file__), '..',
+                                 data_path, 'training', corpus_name)
+    fr_corpus_path   = corpus_path + '.f'
+    en_corpus_path   = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
     run_uniform(corpus, data_path)
-
     run_random(corpus, data_path)
-
-
