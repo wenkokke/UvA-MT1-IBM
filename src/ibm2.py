@@ -1,13 +1,15 @@
 # coding: utf-8
-
+import os
 from collections import defaultdict
 from itertools   import chain,product
+
+import time
 from msgpack     import pack,unpack
 from random      import random
 from sys         import stdout
 from os          import path
 
-
+import matplotlib.pyplot as plt
 import math
 import operator
 import numpy as np
@@ -32,15 +34,20 @@ class IBM:
 
     def em_train(self,corpus,n=10, s=1):
         for k in range(s,n+s):
-            print("Likelihood: %.5f" % self.log_likelihood(corpus))
             self.em_iter(corpus,passnum=k)
-            print("\rPass %2d: 100.00%%" % k)
 
 
     def log_likelihood(self, corpus):
 
+        start = time.time()
+
         likelihood = 0.0
         for k, (f, e) in enumerate(corpus):
+
+            if k % 1000 == 0:
+                stdout.write("\rLog-likelihood calculations: %6.2f%%" % ((100 * k) / float(len(corpus))))
+                stdout.flush()
+
             l = len(e) + 1
             m = len(f) + 1
             e = [None] + e
@@ -48,14 +55,18 @@ class IBM:
             score = 0.0
             for i in range(1, m):
                 score += sum(
-                    [ (self.q[(j, i, l, m)] * self.t[(f[i - 1], e[j])])
+                    [ (self.q[(j, i, l, m)] * self.t[(f[i - 1], e[j])]) / (m * l)
                       for j in range(0, l)])
             likelihood += math.log(score)
+
+        print("\rLog-likelihood: %.5f (Elapsed: %.2fs)" % (likelihood,(time.time() - start)))
 
         return likelihood
 
 
     def em_iter(self,corpus,passnum=1):
+
+        start = time.time()
 
         c1 = defaultdict(float) # ei aligned with fj
         c2 = defaultdict(float) # ei aligned with anything
@@ -64,7 +75,7 @@ class IBM:
 
         for k, (f, e) in enumerate(corpus):
 
-            if k % 100 == 0:
+            if k % 1000 == 0:
                 stdout.write("\rPass %2d: %6.2f%%" % (passnum, (100*k) / float(len(corpus))))
                 stdout.flush()
 
@@ -89,6 +100,8 @@ class IBM:
 
         self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
         self.q = defaultdict(float,{k: v / c4[k[1:]] for k,v in c3.iteritems() if v > 0.0})
+
+        print("\rPass %2d: 100.00%% (Elapsed: %.2fs)" % (passnum,(time.time() - start)))
 
 
     def predict_alignment(self,e,f):
@@ -122,14 +135,17 @@ class IBM:
     @classmethod
     def with_generator(cls,corpus,g):
 
+        start = time.time()
+
         # "Compute all possible alignments..."
         lens   = set()
         aligns = defaultdict(set)
 
         for k, (f, e) in enumerate(corpus):
 
-            stdout.write("\rInit    %6.2f%%" % ((33 * k) / float(len(corpus))))
-            stdout.flush()
+            if k % 1000 == 0:
+                stdout.write("\rInit    %6.2f%%" % ((33 * k) / float(len(corpus))))
+                stdout.flush()
 
             e = [None] + e
             lens.add((len(e), len(f) + 1))
@@ -141,8 +157,10 @@ class IBM:
         k = 0
         t = dict()
         for e, aligns_to_e in aligns.iteritems():
-            stdout.write("\rInit    %6.2f%%" % (33 + ((33*k) / float(len(aligns)))))
-            stdout.flush()
+
+            if k % 1000 == 0:
+                stdout.write("\rInit    %6.2f%%" % (33 + ((33*k) / float(len(aligns)))))
+                stdout.flush()
             k += 1
 
             p_values = g(len(aligns_to_e))
@@ -151,72 +169,16 @@ class IBM:
         # "Compute initial probabilities for each distortion..."
         q = dict()
         for k, (l, m) in enumerate(lens):
-            stdout.write("\rInit    %6.2f%%" % (66 + ((33*k) / float(len(lens)))))
-            stdout.flush()
+
+            if k % 1000 == 0:
+                stdout.write("\rInit    %6.2f%%" % (66 + ((33*k) / float(len(lens)))))
+                stdout.flush()
 
             for i in range(1,m):
                 p_values = g(l)
                 for j in range(0,l):
                     q[(j,i,l,m)] = p_values[j]
-        print "\rInit     100.00%"
+
+        print "\rInit     100.00%% (Elapsed: %.2fs)" % (time.time() - start)
 
         return cls(t,q)
-
-
-def read_corpus(path):
-    """Read a file as a list of lists of words."""
-    with open(path,'r') as f:
-        return [ ln.strip().split() for ln in f ]
-
-
-def main(corpus, ibm_init, pack_path, corpus_name, n):
-
-    ibm = None
-
-    for s in range(0, n):
-        curr_pack_path = path.join(pack_path , corpus_name + '.' + str(s  ) + '.pack')
-        next_pack_path = path.join(pack_path , corpus_name + '.' + str(s+1) + '.pack')
-
-        if not path.isfile(next_pack_path):
-
-            if path.isfile(curr_pack_path):
-                with open(curr_pack_path, 'r') as stream:
-                    ibm = IBM.load(stream)
-                    print "Loaded %s" % (curr_pack_path)
-
-            else:
-                if ibm is None:
-                    ibm = ibm_init(corpus)
-                ibm.em_train(corpus, n=1, s=s)
-
-                with open(curr_pack_path, 'w') as stream:
-                    ibm.dump(stream)
-                    print "Dumped %s" % (curr_pack_path)
-
-            print_test_example(ibm)
-
-
-def print_test_example(ibm):
-    e = 'the government is doing what the Canadians want .'.split()
-    f = 'le gouvernement fait ce que veulent les Canadiens .'.split()
-
-    a = ibm.predict_alignment(e,f)
-
-    print ' '.join(e)
-    print ' '.join(f)
-    e = ['NULL'] + e
-    print ' '.join([e[j] for j in a])
-
-
-if __name__ == "__main__":
-
-    data_path   = 'data'
-    corpus_name = '10000'
-    corpus_path = path.join(path.dirname(__file__), '..',
-                                 data_path, 'training', corpus_name)
-    fr_corpus_path   = corpus_path + '.f'
-    en_corpus_path   = corpus_path + '.e'
-    corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
-
-    main(corpus, IBM.uniform, path.join(data_path,'model','ibm2','unif'), corpus_name, 20)
-    main(corpus, IBM.random , path.join(data_path,'model','ibm2','rand'), corpus_name, 20)
