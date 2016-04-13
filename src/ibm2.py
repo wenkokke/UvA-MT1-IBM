@@ -74,18 +74,17 @@ class IBM:
         m = len(f) + 1
         e = [None] + e
 
-        a = []
-        for i in range(1, m):
-            p_e = {k: v * self.q[(e.index(k[1]), i, l, m)]
-                   for k, v in self.t.iteritems()
-                   if k[0] == f[i - 1] and k[1] in e}
+        # for each french word:
+        #  - compute a list of indices j of words in the english sentence,
+        #    together with the probability of e[j] being aligned with f[i-1]
+        #  - take the index j for the word with the _highest_ probability;
+        return [
+            max(
+                [ (j, self.t[(f[i - 1], e[j])] * self.q[(j, i, l, m)])
+                  for j in range(0,l) ]
+                , key = lambda x: x[1])[0]
+            for i in range(1,m) ]
 
-            if len(p_e) == 0:
-                a.append(0)
-            else:
-                a.append(e.index(
-                    max(p_e.iteritems(), key=operator.itemgetter(1))[0][1]))
-        return a
 
     @classmethod
     def random(cls, corpus):
@@ -195,7 +194,7 @@ if __name__ == "__main__":
     #     print_test_example(ibm)
 
     data_path   = 'data'
-    corpus_name = 'small'
+    corpus_name = '10000'
     corpus_path = path.join(path.dirname(__file__), '..',
                                  data_path, 'training', corpus_name)
     fr_corpus_path   = corpus_path + '.f'
