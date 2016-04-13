@@ -134,8 +134,16 @@ if __name__ == "__main__":
 
     ibm = ibm1.IBM
 
-    param = ibm1.Param(q0=1000)
-    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random1+100'), corpus_name, 20)
-    param = ibm1.Param(n=0.01)
-    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random1+n=0.01'), corpus_name,
-         20)
+    param = ibm1.Param()
+    run(corpus, ibm, lambda: ibm.uniform(corpus, param), path.join(data_path, 'model', 'ibm1', 'uniform'), corpus_name, 20)
+    param = ibm1.Param()
+    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random1'), corpus_name, 20)
+    param = ibm1.Param()
+    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random2'), corpus_name, 20)
+    param = ibm1.Param()
+    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random3'), corpus_name, 20)
+
+    # param = ibm1.Param(q0=1000)
+    # run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random1+100'), corpus_name, 20)
+    # param = ibm1.Param(n=0.01)
+    # run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random1+n=0.01'), corpus_name, 20)
