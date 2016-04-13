@@ -195,9 +195,9 @@ if __name__ == "__main__":
     #     ibm = IBM.load(stream)
     #     print_test_example(ibm)
 
-    corpus_data_path = 'data'
-    corpus_name      = 'small'
-    corpus_path      = path.join(path.dirname(__file__), '..',
+    data_path   = 'data'
+    corpus_name = 'small'
+    corpus_path = path.join(path.dirname(__file__), '..',
                                  data_path, 'training', corpus_name)
     fr_corpus_path   = corpus_path + '.f'
     en_corpus_path   = corpus_path + '.e'
