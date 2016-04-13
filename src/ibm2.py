@@ -6,11 +6,12 @@ from msgpack     import pack,unpack
 from random      import random
 from sys         import stdout
 from os          import path
-import operator
+
 
 import math
 import operator
 import numpy as np
+
 
 class IBM:
 
@@ -32,14 +33,13 @@ class IBM:
             print("\rPass %2d: 100.00%%" % k)
             print("Likelihood: %.5f" % l)
 
+
     def em_iter(self,corpus,passnum=1):
 
         c1 = defaultdict(float) # ei aligned with fj
         c2 = defaultdict(float) # ei aligned with anything
         c3 = defaultdict(float) # wj aligned with wi
         c4 = defaultdict(float) # wi aligned with anything
-
-        likelihood = 0.0
 
         for k, (f, e) in enumerate(corpus):
 
@@ -69,7 +69,6 @@ class IBM:
         self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
         self.q = defaultdict(float,{k: v / c4[k[1:]] for k,v in c3.iteritems() if v > 0.0})
 
-        return likelihood
 
     def predict_alignment(self,e,f):
         l = len(e) + 1
@@ -204,15 +203,13 @@ if __name__ == "__main__":
     #     ibm = IBM.load(stream)
     #     print_test_example(ibm)
 
-    data_path = '../data'
-    corpus_name = 'small'
-    corpus_path = data_path + '/training/' + corpus_name
-    fr_corpus_path = corpus_path + '.f'
-    en_corpus_path = corpus_path + '.e'
+    corpus_data_path = 'data'
+    corpus_name      = 'small'
+    corpus_path      = path.join(path.dirname(__file__), '..',
+                                 data_path, 'training', corpus_name)
+    fr_corpus_path   = corpus_path + '.f'
+    en_corpus_path   = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
     run_uniform(corpus, data_path)
-
     run_random(corpus, data_path)
-
-
