@@ -159,29 +159,31 @@ def read_corpus(path):
         return [ ln.strip().split() for ln in f ]
 
 
-def main(corpus, ibm, pack_path, corpus_name, n):
+def main(corpus, ibm_init, pack_path, corpus_name, n):
 
-    for s in range(1, n + 1):
+    ibm = None
 
+    for s in range(0, n + 1):
         curr_pack_path = pack_path + corpus_name + '.' + str(s    ) + '.pack'
         next_pack_path = pack_path + corpus_name + '.' + str(s + 1) + '.pack'
 
-        if path.isfile(curr_pack_path) and not path.isfile(next_pack_path):
+        if not path.isfile(next_pack_path):
 
-            with open(curr_pack_path, 'r') as stream:
-                ibm = IBM.load(stream)
+            if path.isfile(curr_pack_path):
+                with open(curr_pack_path, 'r') as stream:
+                    ibm = IBM.load(stream)
+                    print "Loaded %s" % (curr_pack_path)
+
+            else:
+                if ibm is None:
+                    ibm = ibm_init(corpus)
+                ibm.em_train(corpus, n=1, s=s)
+
+                with open(curr_pack_path, 'w') as stream:
+                    ibm.dump(stream)
+                    print "Dumped %s" % (curr_pack_path)
 
             print_test_example(ibm)
-            print "Loaded %s" % (curr_pack_path)
-
-        elif not path.isfile(curr_pack_path):
-
-            ibm.em_train(corpus, n=1, s=s)
-            print_test_example(ibm)
-
-            with open(curr_pack_path, 'w') as stream:
-                ibm.dump(stream)
-                print "Dumped %s" % (curr_pack_path)
 
 
 def print_test_example(ibm):
@@ -215,5 +217,5 @@ if __name__ == "__main__":
     en_corpus_path   = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
-    main(corpus, IBM.uniform(corpus), path.join(data_path,'model','ibm2','unif'), corpus_name, 20)
-    main(corpus, IBM.random(corpus) , path.join(data_path,'model','ibm2','rand'), corpus_name, 20)
+    main(corpus, IBM.uniform, path.join(data_path,'model','ibm2','unif'), corpus_name, 20)
+    main(corpus, IBM.random , path.join(data_path,'model','ibm2','rand'), corpus_name, 20)
