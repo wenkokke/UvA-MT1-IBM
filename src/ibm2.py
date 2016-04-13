@@ -28,9 +28,24 @@ class IBM:
 
     def em_train(self,corpus,n=10, s=1):
         for k in range(s,n+s):
-            l = self.em_iter(corpus,passnum=k)
+            self.em_iter(corpus,passnum=k)
             print("\rPass %2d: 100.00%%" % k)
-            print("Likelihood: %.5f" % l)
+            print("Likelihood: %.5f" % self.log_likelihood(corpus))
+
+    def log_likelihood(self, corpus):
+
+        likelihood = 0.0
+        for k, (f, e) in enumerate(corpus):
+            l = len(e) + 1
+            m = len(f) + 1
+            e = [None] + e
+            score = 0.0
+            for i in range(1, m):
+                score += sum([(self.q[(j, i, l, m)] * self.t[(f[i - 1], e[j])]) / (l ** m)
+                          for j in range(0, l)])
+            likelihood += math.log(score)
+
+        return likelihood
 
     def em_iter(self,corpus,passnum=1):
 
@@ -39,7 +54,6 @@ class IBM:
         c3 = defaultdict(float) # wj aligned with wi
         c4 = defaultdict(float) # wi aligned with anything
 
-        likelihood = 0.0
 
         for k, (f, e) in enumerate(corpus):
 
@@ -68,8 +82,6 @@ class IBM:
 
         self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
         self.q = defaultdict(float,{k: v / c4[k[1:]] for k,v in c3.iteritems() if v > 0.0})
-
-        return likelihood
 
     def predict_alignment(self,e,f):
         l = len(e) + 1
