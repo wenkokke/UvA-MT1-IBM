@@ -29,9 +29,8 @@ class IBM:
 
     def em_train(self,corpus,n=10, s=1):
         for k in range(s,n+s):
-            l = self.em_iter(corpus,passnum=k)
+            self.em_iter(corpus,passnum=k)
             print("\rPass %2d: 100.00%%" % k)
-            print("Likelihood: %.5f" % l)
 
 
     def em_iter(self,corpus,passnum=1):
