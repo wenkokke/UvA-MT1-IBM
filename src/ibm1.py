@@ -1,5 +1,5 @@
 from collections import defaultdict
-from itertools   import chain,product
+from itertools   import chain,product,repeat
 from msgpack     import pack,unpack
 from random      import random
 from sys         import stdout
@@ -18,8 +18,9 @@ class IBM:
     def dump(self,stream):
         pack(self.t, stream)
 
-    def __init__(self, t):
-        self.t = t
+    def __init__(self, t, q0 = 1):
+        self.t  = t
+        self.q0 = q0
 
     def em_train(self,corpus,n=10,s=1):
         for k in range(s, n + s):
@@ -37,10 +38,9 @@ class IBM:
                 stdout.write("\rPass %2d: %6.2f%%" % (passnum, (100*k) / float(len(corpus))))
                 stdout.flush()
 
-            e = [None] + e
+            e = list(repeat(None,self.q0)) + e
             l = len(e)
             m = len(f) + 1
-
             q = 1 / float(len(e))
 
             for i in range(1,m):
@@ -59,9 +59,9 @@ class IBM:
 
 
     def predict_alignment(self,e,f):
-        l = len(e) + 1
+        e = list(repeat(None,self.q0)) + e
+        l = len(e)
         m = len(f) + 1
-        e = [None] + e
 
         # for each french word:
         #  - compute a list of indices j of words in the english sentence,
@@ -73,16 +73,16 @@ class IBM:
             for i in range(1,m) ]
 
     @classmethod
-    def random(cls,corpus):
+    def random(cls,corpus, q0 = 1):
         return cls.with_generator(
-            corpus, lambda n: np.random.dirichlet(np.ones(n),size=1)[0])
+            corpus, lambda n: np.random.dirichlet(np.ones(n),size=1)[0], q0 = q0)
 
     @classmethod
-    def uniform(cls,corpus):
-        return cls.with_generator(corpus, lambda n: [1 / float(n)] * n)
+    def uniform(cls,corpus,q0 = 1):
+        return cls.with_generator(corpus, lambda n: [1 / float(n)] * n, q0 = q0)
 
     @classmethod
-    def with_generator(cls,corpus,g):
+    def with_generator(cls,corpus,g,q0 = 1):
 
         # "Compute all possible alignments..."
         lens   = set()
@@ -92,7 +92,7 @@ class IBM:
             stdout.write("\rInit    %6.2f%%" % ((50*k) / float(len(corpus))))
             stdout.flush()
 
-            e = [None] + e
+            e = list(repeat(None,q0)) + e
             lens.add((len(e), len(f) + 1))
 
             for (f, e) in product(f, e):
@@ -111,7 +111,7 @@ class IBM:
 
         print "\rInit     100.00%"
 
-        return cls(t)
+        return cls(t, q0 = q0)
 
 
 
@@ -121,7 +121,7 @@ def read_corpus(path):
         return [ ln.strip().split() for ln in f ]
 
 
-def main(corpus, ibm_init, pack_path, corpus_name, n):
+def main(corpus, mk_ibm, pack_path, corpus_name, n):
 
     ibm = None
 
@@ -138,7 +138,7 @@ def main(corpus, ibm_init, pack_path, corpus_name, n):
 
             else:
                 if ibm is None:
-                    ibm = ibm_init(corpus)
+                    ibm = mk_ibm()
                 ibm.em_train(corpus, n=1, s=s)
 
                 with open(curr_pack_path, 'w') as stream:
@@ -151,12 +151,11 @@ def main(corpus, ibm_init, pack_path, corpus_name, n):
 def print_test_example(ibm):
     e = 'the government is doing what the Canadians want .'.split()
     f = 'le gouvernement fait ce que veulent les Canadiens .'.split()
-
     a = ibm.predict_alignment(e,f)
 
     print ' '.join(e)
     print ' '.join(f)
-    e = ['NULL'] + e
+    e = list(repeat('NULL',ibm.q0)) + e
     print ' '.join([e[j] for j in a])
 
 
@@ -170,5 +169,4 @@ if __name__ == "__main__":
     en_corpus_path   = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
-    main(corpus, IBM.uniform, path.join(data_path,'model','ibm1','unif'), corpus_name, 20)
-    main(corpus, IBM.random , path.join(data_path,'model','ibm1','rand'), corpus_name, 20)
+    main(corpus, lambda: IBM.random(corpus,q0 = 100) , path.join(data_path,'model','ibm1','rand+100'), corpus_name, 20)
