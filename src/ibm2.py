@@ -20,18 +20,22 @@ class IBM:
         (t,q) = unpack(stream,use_list=False)
         return cls(defaultdict(float,t), defaultdict(float,q))
 
+
     def dump(self,stream):
         pack((self.t,self.q), stream)
+
 
     def __init__(self, t, q):
         self.t = t
         self.q = q
 
+
     def em_train(self,corpus,n=10, s=1):
         for k in range(s,n+s):
+            print("Likelihood: %.5f" % self.log_likelihood(corpus))
             self.em_iter(corpus,passnum=k)
             print("\rPass %2d: 100.00%%" % k)
-            print("Likelihood: %.5f" % self.log_likelihood(corpus))
+
 
     def log_likelihood(self, corpus):
 
@@ -40,13 +44,16 @@ class IBM:
             l = len(e) + 1
             m = len(f) + 1
             e = [None] + e
+
             score = 0.0
             for i in range(1, m):
-                score += sum([(self.q[(j, i, l, m)] * self.t[(f[i - 1], e[j])]) / (l ** m)
-                          for j in range(0, l)])
+                score += sum(
+                    [ (self.q[(j, i, l, m)] * self.t[(f[i - 1], e[j])])
+                      for j in range(0, l)])
             likelihood += math.log(score)
 
         return likelihood
+
 
     def em_iter(self,corpus,passnum=1):
 
@@ -83,6 +90,7 @@ class IBM:
         self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
         self.q = defaultdict(float,{k: v / c4[k[1:]] for k,v in c3.iteritems() if v > 0.0})
 
+
     def predict_alignment(self,e,f):
         l = len(e) + 1
         m = len(f) + 1
@@ -105,9 +113,11 @@ class IBM:
         return cls.with_generator(
             corpus, lambda n: np.random.dirichlet(np.ones(n), size=1)[0])
 
+
     @classmethod
     def uniform(cls,corpus):
         return cls.with_generator(corpus, lambda n: [1 / float(n)] * n)
+
 
     @classmethod
     def with_generator(cls,corpus,g):
@@ -199,15 +209,6 @@ def print_test_example(ibm):
 
 
 if __name__ == "__main__":
-
-    # corpus_path = '../data/training/hansards.36.2'
-    # fr_corpus_path = corpus_path + '.f'
-    # en_corpus_path = corpus_path + '.e'
-    #
-    # pack_path = corpus_path + '.20.uniform2.pack'
-    # with open(pack_path, 'r') as stream:
-    #     ibm = IBM.load(stream)
-    #     print_test_example(ibm)
 
     data_path   = 'data'
     corpus_name = '10000'
