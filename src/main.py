@@ -1,4 +1,5 @@
 # coding: utf-8
+import itertools
 from msgpack     import pack,unpack
 from os          import path
 
@@ -123,14 +124,16 @@ if __name__ == "__main__":
     corpus_path = path.join(data_path, 'training', corpus_name)
     fr_corpus_path   = corpus_path + '.f'
     en_corpus_path   = corpus_path + '.e'
-    corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
+    en_corpus = read_corpus(en_corpus_path)
+    en_vocabulary_len = len(set(itertools.chain(*en_corpus)))
+    corpus = zip(read_corpus(fr_corpus_path), en_corpus)
 
     ibm = ibm2.IBM
 
-    # run(corpus, ibm, lambda: ibm.uniform(corpus), path.join(data_path,'model','ibm2','uniform'), corpus_name, 20)
-    # run(corpus, ibm, lambda: ibm.random(corpus) , path.join(data_path,'model','ibm2','random1'), corpus_name, 20)
-    # run(corpus, ibm, lambda: ibm.random(corpus) , path.join(data_path,'model','ibm2','random2'), corpus_name, 20)
-    # run(corpus, ibm, lambda: ibm.random(corpus) , path.join(data_path,'model','ibm2','random3'), corpus_name, 20)
+    run(corpus, ibm, lambda: ibm.uniform(corpus), path.join(data_path,'model','ibm2','uniform'), corpus_name, 20)
+    run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random1'), corpus_name, 20)
+    run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random2'), corpus_name, 20)
+    run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random3'), corpus_name, 20)
 
     ibm = ibm1.IBM
 
@@ -143,7 +146,14 @@ if __name__ == "__main__":
     param = ibm1.Param()
     run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random3'), corpus_name, 20)
 
-    # param = ibm1.Param(q0=1000)
-    # run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random1+100'), corpus_name, 20)
-    # param = ibm1.Param(n=0.01)
-    # run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random1+n=0.01'), corpus_name, 20)
+    param = ibm1.Param(n=0.01,v=en_vocabulary_len)
+    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-n0.01'), corpus_name, 20)
+    param = ibm1.Param(n=0.005, v=en_vocabulary_len)
+    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-n0.005'), corpus_name, 20)
+    param = ibm1.Param(n=0.0005, v=en_vocabulary_len)
+    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-n0.0005'), corpus_name, 20)
+
+    param = ibm1.Param(q0=2)
+    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-q02'), corpus_name, 20)
+    param = ibm1.Param(q0=3)
+    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-q03'), corpus_name, 20)
