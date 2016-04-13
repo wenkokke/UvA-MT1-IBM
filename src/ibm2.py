@@ -147,29 +147,29 @@ def read_corpus(path):
         return [ ln.strip().split() for ln in f ]
 
 
-def main(corpus, ibm, packs_path, n):
+def main(corpus, ibm, pack_path, corpus_name, n):
 
     for s in range(1, n + 1):
 
-        pack_path      = packs_path + corpus_name + '.' + str(s) + '.pack'
-        next_pack_path = packs_path + corpus_name + '.' + str(s + 1) + '.pack'
+        curr_pack_path = pack_path + corpus_name + '.' + str(s    ) + '.pack'
+        next_pack_path = pack_path + corpus_name + '.' + str(s + 1) + '.pack'
 
-        if path.isfile(pack_path) and not path.isfile(next_pack_path):
+        if path.isfile(curr_pack_path) and not path.isfile(next_pack_path):
 
-            with open(pack_path, 'r') as stream:
+            with open(curr_pack_path, 'r') as stream:
                 ibm = IBM.load(stream)
 
             print_test_example(ibm)
-            print "Loaded %s" % (pack_path)
+            print "Loaded %s" % (curr_pack_path)
 
-        elif not path.isfile(pack_path):
+        elif not path.isfile(curr_pack_path):
 
             ibm.em_train(corpus, n=1, s=s)
             print_test_example(ibm)
 
-            with open(pack_path, 'w') as stream:
+            with open(curr_pack_path, 'w') as stream:
                 ibm.dump(stream)
-                print "Dumped %s" % (pack_path)
+                print "Dumped %s" % (curr_pack_path)
 
 
 def print_test_example(ibm):
@@ -203,5 +203,5 @@ if __name__ == "__main__":
     en_corpus_path   = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
-    main(corpus, IBM.uniform(corpus), path.join(data_path,'model','ibm2','unif'), 20)
-    main(corpus, IBM.random(corpus) , path.join(data_path,'model','ibm2','rand'), 20)
+    main(corpus, IBM.uniform(corpus), path.join(data_path,'model','ibm2','unif'), corpus_name, 20)
+    main(corpus, IBM.random(corpus) , path.join(data_path,'model','ibm2','rand'), corpus_name, 20)
