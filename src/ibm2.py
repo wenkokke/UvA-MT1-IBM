@@ -147,21 +147,9 @@ def read_corpus(path):
         return [ ln.strip().split() for ln in f ]
 
 
-def run_random(corpus, data_path):
-    ibm = IBM.random(corpus)
-    packs_path = data_path + '/model/ibm2/random/'
-    train_em_and_store(corpus, ibm, packs_path, 20)
-
-
-def run_uniform(corpus, data_path):
-    ibm = IBM.uniform(corpus)
-    packs_path = data_path + '/model/ibm2/uniform/'
-    train_em_and_store(corpus, ibm, packs_path, 20)
-
-
-def train_em_and_store(corpus, ibm, packs_path, n):
+def main(corpus, ibm, packs_path, n):
     for s in range(1, n + 1):
-        pack_path = packs_path + corpus_name + '.' + str(s) + '.pack'
+        pack_path      = packs_path + corpus_name + '.' + str(s) + '.pack'
         next_pack_path = packs_path + corpus_name + '.' + str(s + 1) + '.pack'
         if path.isfile(pack_path) and not path.isfile(next_pack_path):
             with open(pack_path, 'r') as stream:
@@ -211,5 +199,5 @@ if __name__ == "__main__":
     en_corpus_path   = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
-    run_uniform(corpus, data_path)
-    run_random(corpus, data_path)
+    main(corpus, IBM.uniform(corpus), path.join(data_path,'model','ibm2','unif'), 20)
+    main(corpus, IBM.random(corpus) , path.join(data_path,'model','ibm2','rand'), 20)
