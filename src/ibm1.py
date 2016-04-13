@@ -9,6 +9,14 @@ import operator
 import numpy as np
 
 Param = namedtuple('Param',['q0','n','v'])
+Param.__new__.__defaults__ = (1 , 0.01 , 100000)
+
+class Param:
+    def __init__(self,q0 = 1,n = 0, v = 100000):
+        self.q0 = q0 # added number of NULL words
+        self.n  = n  # smoothing ratio
+        self.v  = v  # number of lexical items
+
 
 class IBM:
 
@@ -27,8 +35,9 @@ class IBM:
         else:
             self.param = param
 
-    def nones(arg=None):
-        return list(repeat(arg,self.q0))
+    @staticmethod
+    def nones(q0,arg=None):
+        return list(repeat(arg,q0))
 
     def em_train(self,corpus,n=10,s=1):
         for k in range(s, n + s):
@@ -46,7 +55,7 @@ class IBM:
                 stdout.write("\rPass %2d: %6.2f%%" % (passnum, (100*k) / float(len(corpus))))
                 stdout.flush()
 
-            e = self.nones() + e
+            e = IBM.nones(self.param.q0) + e
             l = len(e)
             m = len(f) + 1
             q = 1 / float(len(e))
@@ -63,11 +72,13 @@ class IBM:
                     c1[(f[i - 1], e[j])] += delta
                     c2[(e[j],)]          += delta
 
-        self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
+        self.t = defaultdict(float,{
+            k: (v + self.param.n) / (c2[k[1:]] + (n * self.param.v))
+            for k,v in c1.iteritems() if v > 0.0 })
 
 
     def predict_alignment(self,e,f):
-        e = self.nones() + e
+        e = IBM.nones(self.param.q0) + e
         l = len(e)
         m = len(f) + 1
 
@@ -81,16 +92,16 @@ class IBM:
             for i in range(1,m) ]
 
     @classmethod
-    def random(cls,corpus,param=None):
+    def random(cls,corpus,param):
         return cls.with_generator(
             corpus, lambda n: np.random.dirichlet(np.ones(n),size=1)[0],param)
 
     @classmethod
-    def uniform(cls,corpus,param=None):
+    def uniform(cls,corpus,param):
         return cls.with_generator(corpus, lambda n: [1 / float(n)] * n,param)
 
     @classmethod
-    def with_generator(cls,corpus,g,param=None):
+    def with_generator(cls,corpus,g,param):
 
         # "Compute all possible alignments..."
         lens   = set()
@@ -100,7 +111,7 @@ class IBM:
             stdout.write("\rInit    %6.2f%%" % ((50*k) / float(len(corpus))))
             stdout.flush()
 
-            e = self.nones() + e
+            e = IBM.nones(param.q0) + e
             lens.add((len(e), len(f) + 1))
 
             for (f, e) in product(f, e):
@@ -163,7 +174,7 @@ def print_test_example(ibm):
 
     print ' '.join(e)
     print ' '.join(f)
-    e = ibm.nones(arg='NULL') + e
+    e =  IBM.nones(ibm.param.q0,arg='NULL') + e
     print ' '.join([e[j] for j in a])
 
 
@@ -177,4 +188,7 @@ if __name__ == "__main__":
     en_corpus_path   = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
-    main(corpus, lambda: IBM.random(corpus,q0 = 100) , path.join(data_path,'model','ibm1','rand+100'), corpus_name, 20)
+    param = Param(q0 = 1000)
+    main(corpus, lambda: IBM.random(corpus,param) , path.join(data_path,'model','ibm1','rand+100'), corpus_name, 20)
+    param = Param(n = 0.01)
+    main(corpus, lambda: IBM.random(corpus,param) , path.join(data_path,'model','ibm1','rand+n=0.01'), corpus_name, 20)
