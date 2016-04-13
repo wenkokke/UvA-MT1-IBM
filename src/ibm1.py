@@ -1,12 +1,22 @@
-from collections import defaultdict
-from itertools   import chain,product
+from collections import defaultdict,namedtuple
+from itertools   import chain,product,repeat
 from msgpack     import pack,unpack
 from random      import random
 from sys         import stdout
 from os          import path
-import operator
 
+import operator
 import numpy as np
+
+Param = namedtuple('Param',['q0','n','v'])
+Param.__new__.__defaults__ = (1 , 0.01 , 100000)
+
+class Param:
+    def __init__(self,q0 = 1,n = 0, v = 100000):
+        self.q0 = q0 # added number of NULL words
+        self.n  = n  # smoothing ratio
+        self.v  = v  # number of lexical items
+
 
 class IBM:
 
@@ -18,8 +28,16 @@ class IBM:
     def dump(self,stream):
         pack(self.t, stream)
 
-    def __init__(self, t):
+    def __init__(self,t,param=None):
         self.t = t
+        if param is None:
+            self.param = Param(q0 = 1, n = 0.01, v = 100.000)
+        else:
+            self.param = param
+
+    @staticmethod
+    def nones(q0,arg=None):
+        return list(repeat(arg,q0))
 
     def em_train(self,corpus,n=10,s=1):
         for k in range(s, n + s):
@@ -37,10 +55,9 @@ class IBM:
                 stdout.write("\rPass %2d: %6.2f%%" % (passnum, (100*k) / float(len(corpus))))
                 stdout.flush()
 
-            e = [None] + e
+            e = IBM.nones(self.param.q0) + e
             l = len(e)
             m = len(f) + 1
-
             q = 1 / float(len(e))
 
             for i in range(1,m):
@@ -55,13 +72,15 @@ class IBM:
                     c1[(f[i - 1], e[j])] += delta
                     c2[(e[j],)]          += delta
 
-        self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
+        self.t = defaultdict(float,{
+            k: (v + self.param.n) / (c2[k[1:]] + (self.param.n * self.param.v))
+            for k,v in c1.iteritems() if v > 0.0 })
 
 
     def predict_alignment(self,e,f):
-        l = len(e) + 1
+        e = IBM.nones(self.param.q0) + e
+        l = len(e)
         m = len(f) + 1
-        e = [None] + e
 
         # for each french word:
         #  - compute a list of indices j of words in the english sentence,
@@ -73,16 +92,16 @@ class IBM:
             for i in range(1,m) ]
 
     @classmethod
-    def random(cls,corpus):
+    def random(cls,corpus,param):
         return cls.with_generator(
-            corpus, lambda n: np.random.dirichlet(np.ones(n),size=1)[0])
+            corpus, lambda n: np.random.dirichlet(np.ones(n),size=1)[0],param)
 
     @classmethod
-    def uniform(cls,corpus):
-        return cls.with_generator(corpus, lambda n: [1 / float(n)] * n)
+    def uniform(cls,corpus,param):
+        return cls.with_generator(corpus, lambda n: [1 / float(n)] * n,param)
 
     @classmethod
-    def with_generator(cls,corpus,g):
+    def with_generator(cls,corpus,g,param):
 
         # "Compute all possible alignments..."
         lens   = set()
@@ -92,7 +111,7 @@ class IBM:
             stdout.write("\rInit    %6.2f%%" % ((50*k) / float(len(corpus))))
             stdout.flush()
 
-            e = [None] + e
+            e = IBM.nones(param.q0) + e
             lens.add((len(e), len(f) + 1))
 
             for (f, e) in product(f, e):
@@ -111,7 +130,7 @@ class IBM:
 
         print "\rInit     100.00%"
 
-        return cls(t)
+        return cls(t,param)
 
 
 
@@ -121,7 +140,7 @@ def read_corpus(path):
         return [ ln.strip().split() for ln in f ]
 
 
-def main(corpus, ibm_init, pack_path, corpus_name, n):
+def main(corpus, mk_ibm, pack_path, corpus_name, n):
 
     ibm = None
 
@@ -138,7 +157,7 @@ def main(corpus, ibm_init, pack_path, corpus_name, n):
 
             else:
                 if ibm is None:
-                    ibm = ibm_init(corpus)
+                    ibm = mk_ibm()
                 ibm.em_train(corpus, n=1, s=s)
 
                 with open(curr_pack_path, 'w') as stream:
@@ -151,12 +170,11 @@ def main(corpus, ibm_init, pack_path, corpus_name, n):
 def print_test_example(ibm):
     e = 'the government is doing what the Canadians want .'.split()
     f = 'le gouvernement fait ce que veulent les Canadiens .'.split()
-
     a = ibm.predict_alignment(e,f)
 
     print ' '.join(e)
     print ' '.join(f)
-    e = ['NULL'] + e
+    e =  IBM.nones(ibm.param.q0,arg='NULL') + e
     print ' '.join([e[j] for j in a])
 
 
@@ -170,5 +188,7 @@ if __name__ == "__main__":
     en_corpus_path   = corpus_path + '.e'
     corpus = zip(read_corpus(fr_corpus_path), read_corpus(en_corpus_path))
 
-    main(corpus, IBM.uniform, path.join(data_path,'model','ibm1','unif'), corpus_name, 20)
-    main(corpus, IBM.random , path.join(data_path,'model','ibm1','rand'), corpus_name, 20)
+    param = Param(q0 = 1000)
+    main(corpus, lambda: IBM.random(corpus,param) , path.join(data_path,'model','ibm1','rand+100'), corpus_name, 20)
+    param = Param(n = 0.01)
+    main(corpus, lambda: IBM.random(corpus,param) , path.join(data_path,'model','ibm1','rand+n=0.01'), corpus_name, 20)
