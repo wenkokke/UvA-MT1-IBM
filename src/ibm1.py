@@ -1,12 +1,14 @@
-from collections import defaultdict
+from collections import defaultdict,namedtuple
 from itertools   import chain,product,repeat
 from msgpack     import pack,unpack
 from random      import random
 from sys         import stdout
 from os          import path
-import operator
 
+import operator
 import numpy as np
+
+Param = namedtuple('Param',['q0','n','v'])
 
 class IBM:
 
@@ -18,9 +20,15 @@ class IBM:
     def dump(self,stream):
         pack(self.t, stream)
 
-    def __init__(self, t, q0 = 1):
-        self.t  = t
-        self.q0 = q0
+    def __init__(self,t,param=None):
+        self.t = t
+        if param is None:
+            self.param = Param(q0 = 1, n = 0.01, v = 100.000)
+        else:
+            self.param = param
+
+    def nones(arg=None):
+        return list(repeat(arg,self.q0))
 
     def em_train(self,corpus,n=10,s=1):
         for k in range(s, n + s):
@@ -38,7 +46,7 @@ class IBM:
                 stdout.write("\rPass %2d: %6.2f%%" % (passnum, (100*k) / float(len(corpus))))
                 stdout.flush()
 
-            e = list(repeat(None,self.q0)) + e
+            e = self.nones() + e
             l = len(e)
             m = len(f) + 1
             q = 1 / float(len(e))
@@ -59,7 +67,7 @@ class IBM:
 
 
     def predict_alignment(self,e,f):
-        e = list(repeat(None,self.q0)) + e
+        e = self.nones() + e
         l = len(e)
         m = len(f) + 1
 
@@ -73,16 +81,16 @@ class IBM:
             for i in range(1,m) ]
 
     @classmethod
-    def random(cls,corpus, q0 = 1):
+    def random(cls,corpus,param=None):
         return cls.with_generator(
-            corpus, lambda n: np.random.dirichlet(np.ones(n),size=1)[0], q0 = q0)
+            corpus, lambda n: np.random.dirichlet(np.ones(n),size=1)[0],param)
 
     @classmethod
-    def uniform(cls,corpus,q0 = 1):
-        return cls.with_generator(corpus, lambda n: [1 / float(n)] * n, q0 = q0)
+    def uniform(cls,corpus,param=None):
+        return cls.with_generator(corpus, lambda n: [1 / float(n)] * n,param)
 
     @classmethod
-    def with_generator(cls,corpus,g,q0 = 1):
+    def with_generator(cls,corpus,g,param=None):
 
         # "Compute all possible alignments..."
         lens   = set()
@@ -92,7 +100,7 @@ class IBM:
             stdout.write("\rInit    %6.2f%%" % ((50*k) / float(len(corpus))))
             stdout.flush()
 
-            e = list(repeat(None,q0)) + e
+            e = self.nones() + e
             lens.add((len(e), len(f) + 1))
 
             for (f, e) in product(f, e):
@@ -111,7 +119,7 @@ class IBM:
 
         print "\rInit     100.00%"
 
-        return cls(t, q0 = q0)
+        return cls(t,param)
 
 
 
@@ -155,7 +163,7 @@ def print_test_example(ibm):
 
     print ' '.join(e)
     print ' '.join(f)
-    e = list(repeat('NULL',ibm.q0)) + e
+    e = ibm.nones(arg='NULL') + e
     print ' '.join([e[j] for j in a])
 
 
