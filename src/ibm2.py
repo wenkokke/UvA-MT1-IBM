@@ -105,7 +105,7 @@ class IBM:
         print("\rPass %2d: 100.00%% (Elapsed: %.2fs) (Likelihood: %.5f)" % (passnum,(time.time() - start),likelihood))
 
 
-    def predict_alignment(self,e,f):
+    def predict_alignment(self,f,e):
         l = len(e) + 1
         m = len(f) + 1
         e = [None] + e
