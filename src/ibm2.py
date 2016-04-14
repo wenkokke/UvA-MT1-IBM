@@ -109,12 +109,18 @@ class IBM:
         #  - compute a list of indices j of words in the english sentence,
         #    together with the probability of e[j] being aligned with f[i-1]
         #  - take the index j for the word with the _highest_ probability;
+
+        def possible_alignments(i):
+            num = [(j, self.t[(f[i - 1], e[j])] * self.q[(j, i, l, m)]) for j in range(0, l)]
+            den = float(sum(v for j,v in num))
+            if den > 0:
+                return [(j,v/den) for j,v in num]
+            else:
+                return [(j,0) for j,v in num]
+
         return [
-            max(
-                [ (j, self.t[(f[i - 1], e[j])] * self.q[(j, i, l, m)])
-                  for j in range(0,l) ]
-                , key = lambda x: x[1])[0]
-            for i in range(1,m) ]
+            max(possible_alignments(i), key=lambda x: x[1])
+            for i in range(1,m)]
 
 
     @classmethod
