@@ -3,6 +3,7 @@
 \usepackage{times}
 \usepackage{url}
 \usepackage{latexsym}
+\usepackage{amsmath,amssymb}
 
 \newcommand\BibTeX{B{\sc ib}\TeX}
 \aclfinalcopy
@@ -29,10 +30,49 @@
 %we translated using IBM models 1 & 2
 %mention shortcomings of these models (such as the "ook -> as well" example, where translation can't happen both ways (should be confirmed though, maybe we're making an oversight))
 %we made some improvements
+Machine translation remains a difficult problem to this day. While it's still not perfect, many steps have been taken over the years to bring to where we are today. (ref\_brown) introduced the IBM models 1 through 5 back in 1993 to deal with the problem of alignment: finding the words in a target language that correspond to the words in a source language. Although the models by themselves are insufficient for translation in our current time, the word alignments are still valuable. We implement IBM models 1 and 2 to do this alignment and investigate several improvements by (ref\_moore) as well as some initialisations. In the remainder of this report, we will refer to the source language as French and the target language as English, as this is not only the terminology used by (ref\_brown), but also refers to the actual languages we used for alignment. However, as we describe a generative model, we look at how our French source words were generated from the English words. %something about the parallel corpus here with a source?
 
 \section{Model}
 %short summary IBM 1 \& 2
-%describe choice and implementation of each improvement
+%param optim
+%describe choice and implementation of each improvement (#NOTE: V is not 100000 but rather the number of unique words in english)
+%mention shortcomings
+IBM model 1 is the simplest of the two we implemented, but nevertheless useful as its output can be used to initialise the other model. The model tries to, for each word in each French sentence, find the word in the corresponding English sentence that it was generated from. This link between two corresponding words carries a weight, and assigning these words to eachother forms an alignment.
+
+To get a more in-depth definition of the model, let:
+\begin{itemize}
+\item l = English sentence length
+\item m = French sentence length
+\item i = position of an English word in a sentence
+\item j = position of a French word in a sentence
+\item aj = position of an English word that the j'th French word is aligned to
+\end{itemize}
+
+Ideally, we would want a $p(f|e)$ to translate with, but as this is hard to compute, we get the alignments involved and end up with
+\begin{align}
+p(f,a|e,m &= p(a|e,m)p(f|a,e,m)
+\end{align} 
+This means it assigns an alignment with probability
+\begin{align}
+p(a|e,m) &= \frac{1}{(l+1)^m}
+\end{align}
+and a french word with probability
+\begin{align}
+p(f|a,e,m) &= \prod_{j}^{m}t(f_j | e_{a_j})
+\end{align}
+which is the translation probability of the French word $f_j$ being translated from the English word it is aligned to.
+
+We now wish to optimize this $t(f_j | e_{a_j})$ using the EM algorithm. To do so, we first perform the \textbf{E} step:\\
+For each sentence in the corpus, for each English and French word in that sentence we compute the counts:
+\begin{align}
+c(e_j^k , f_i^k ) &\leftarrow c(e_j^k , f_i^k ) + \delta(k,i,j)\\
+c(e_j^k ) &\leftarrow c( e_j^k ) + \delta(k,i,j)
+\end{align}
+where the $\delta$ function returns 1 if the j'th word is aligned to the i'th word in the k'th sentence, otherwise 0. We then find $t(f_j | e_{a_j})$ in the \textbf{M} step:\\
+\begin{align}
+t(f|e) &= \frac{c(e,f)}{c(e}
+\end{align}
+by looping over all combinations.
 
 \section{Experiments}
 %mention data (train set, test set) #NOTE: test set is not yet provided to us, still greyed out on website. If we never get any, we'll have to split the train data
