@@ -42,38 +42,14 @@ class IBM:
         for k in range(s, n + s):
             self.em_iter(corpus, passnum=k)
 
-    def log_likelihood(self, corpus):
-
-        start = time.time()
-
-        likelihood = 0.0
-        for k, (f, e) in enumerate(corpus):
-
-            if k % 1000 == 0:
-                stdout.write("\rLog-likelihood calculations: %6.2f%%" % ((100 * k) / float(len(corpus))))
-                stdout.flush()
-
-            l = len(e) + 1
-            m = len(f) + 1
-            e = [None] + e
-
-            score = 0.0
-            for i in range(1, m):
-                score += sum(
-                    [(self.t[(f[i - 1], e[j])]) / (m * l)
-                     for j in range(0, l)])
-            likelihood += math.log(score)
-
-        print("\rLog-likelihood: %.5f (Elapsed: %.2fs)" % (likelihood, (time.time() - start)))
-
-        return likelihood
-
     def em_iter(self,corpus,passnum=1):
 
         start = time.time()
 
         c1 = defaultdict(float) # ei aligned with fj
         c2 = defaultdict(float) # ei aligned with anything
+
+        likelihood = 0.0
 
         for k, (f, e) in enumerate(corpus):
 
@@ -84,7 +60,7 @@ class IBM:
             e = IBM.nones(self.param.q0) + e
             l = len(e)
             m = len(f) + 1
-            q = 1 / float(len(e))
+            q = 1 / float(l)
 
             for i in range(1,m):
 
@@ -98,14 +74,15 @@ class IBM:
                     c1[(f[i - 1], e[j])] += delta
                     c2[(e[j],)]          += delta
 
+                likelihood += math.log(den)
+
         self.t = defaultdict(float,{
             k: (v + self.param.n) / (c2[k[1:]] + (self.param.n * self.param.v))
             for k,v in c1.iteritems() if v > 0.0 })
 
-        print("\rPass %2d: 100.00%% (Elapsed: %.2fs)" % (passnum, (time.time() - start)))
+        print("\rPass %2d: 100.00%% (Elapsed: %.2fs) (Likelihood: %.5f)" % (passnum, (time.time() - start), likelihood))
 
-
-    def predict_alignment(self,e,f):
+    def predict_alignment(self, f, e):
         e = IBM.nones(self.param.q0) + e
         l = len(e)
         m = len(f) + 1
@@ -114,18 +91,14 @@ class IBM:
         #  - compute a list of indices j of words in the english sentence,
         #    together with the probability of e[j] being aligned with f[i-1]
         #  - take the index j for the word with the _highest_ probability;
-
-        def possible_alignments(i):
-            num = [(j, self.t[(f[i - 1], e[j])]) for j in range(0, l)]
-            den = float(sum(v for j,v in num))
-            if den > 0:
-                return [(j,v/den) for j,v in num]
-            else:
-                return [(j,0) for j,v in num]
+        def maximum_alignment(i):
+            fw = f[i - 1]
+            possible_alignments = [(j, self.t[(fw, e[j])]) for j in range(0, l)]
+            return max(possible_alignments, key=lambda x: x[1])[0]
 
         return [
-            max(possible_alignments(i), key=lambda x: x[1])
-            for i in range(1,m) ]
+            maximum_alignment(i)
+            for i in range(1, m)]
 
     @classmethod
     def random(cls,corpus,param):

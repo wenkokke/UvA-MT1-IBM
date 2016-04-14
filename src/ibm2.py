@@ -3,6 +3,7 @@ import os
 from collections import defaultdict
 from itertools   import product
 
+import operator
 from msgpack     import pack,unpack
 from sys         import stdout
 
@@ -69,6 +70,8 @@ class IBM:
         c3 = defaultdict(float) # wj aligned with wi
         c4 = defaultdict(float) # wi aligned with anything
 
+        likelihood = 0.0
+
         for k, (f, e) in enumerate(corpus):
 
             if k % 1000 == 0:
@@ -85,6 +88,8 @@ class IBM:
                         for j in range(0,l) ]
                 den = float(sum(num))
 
+                likelihood += math.log(den)
+
                 for j in range(0,l):
 
                     delta = num[j] / den
@@ -97,7 +102,7 @@ class IBM:
         self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
         self.q = defaultdict(float,{k: v / c4[k[1:]] for k,v in c3.iteritems() if v > 0.0})
 
-        print("\rPass %2d: 100.00%% (Elapsed: %.2fs)" % (passnum,(time.time() - start)))
+        print("\rPass %2d: 100.00%% (Elapsed: %.2fs) (Likelihood: %.5f)" % (passnum,(time.time() - start),likelihood))
 
 
     def predict_alignment(self,e,f):
@@ -110,18 +115,13 @@ class IBM:
         #    together with the probability of e[j] being aligned with f[i-1]
         #  - take the index j for the word with the _highest_ probability;
 
-        def possible_alignments(i):
-            num = [(j, self.t[(f[i - 1], e[j])] * self.q[(j, i, l, m)]) for j in range(0, l)]
-            den = float(sum(v for j,v in num))
-            if den > 0:
-                return [(j,v/den) for j,v in num]
-            else:
-                return [(j,0) for j,v in num]
+        def maximum_alignment(i):
+            possible_alignments = [(j, self.t[(f[i - 1], e[j])] * self.q[(j, i, l, m)]) for j in range(0, l)]
+            return max(possible_alignments, key=lambda x: x[1])[0]
 
         return [
-            max(possible_alignments(i), key=lambda x: x[1])
-            for i in range(1,m)]
-
+            maximum_alignment(i)
+            for i in range(1, m)]
 
     @classmethod
     def random(cls, corpus):
