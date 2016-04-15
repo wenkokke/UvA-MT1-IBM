@@ -50,12 +50,13 @@ def run(corpus, ibm_cls, ibm_init, packs_path, corpus_name, n):
                     print "Dumped %s" % curr_pack_path
 
         # Generate evaluation file for testing the model
-        test_model(model, packs_path, corpus_name, s)
+        if model is not None:
+            test_model(model, packs_path, corpus_name, s)
 
     return model
 
 
-def test_model(ibm, eval_data_path, corpus_name, s):
+def test_model(model, eval_data_path, corpus_name, s):
     """
     Test a model against the provided test set by generating an evaluation file
     This file can be used by the provided 'wa_eval_align.pl'
@@ -75,7 +76,7 @@ def test_model(ibm, eval_data_path, corpus_name, s):
 
     for i, (f, e) in enumerate(test_corpus):
 
-        for j,a in enumerate(ibm.viterbi_alignment(f, e)):
+        for j, a in enumerate(model.viterbi_alignment(f, e)):
             if a is not 0:
                 line = "%04d %d %d" % (i+1, a, j+1)
                 handle.write(line + "\n")

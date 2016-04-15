@@ -10,12 +10,12 @@ import math
 
 
 Param = namedtuple('Param', ['q0', 'n', 'v'])
-Param.__new__.__defaults__ = (1, 0.01, 100000)
+Param.__new__.__defaults__ = (1, 0, 100000)
 
 
 class Param:
     """Used as prameters for the optimizations on IBM1"""
-    def __init__(self,q0 = 1,n = 0, v = 100000):
+    def __init__(self, q0=1, n=0, v=100000):
         self.q0 = q0 # added number of NULL words
         self.n  = n  # smoothing ratio
         self.v  = v  # number of lexical items
@@ -25,14 +25,14 @@ class IBM:
     """Class containing the IBM1 Model"""
 
     @classmethod
-    def random(cls, corpus, param):
+    def random(cls, corpus, param=None):
         """Model initialized using a normalized random initialization on the corpus"""
         return cls.with_generator(
             corpus, lambda n: np.random.dirichlet(np.ones(n), size=1)[0], param)
 
 
     @classmethod
-    def uniform(cls, corpus, param):
+    def uniform(cls, corpus, param=None):
         """Model initialized using a normalized uniform initialization on the corpus"""
         return cls.with_generator(corpus, lambda n: [1 / float(n)] * n, param)
 
@@ -40,6 +40,9 @@ class IBM:
     @classmethod
     def with_generator(cls, corpus, g, param):
         """Initialize the model with normalized parameters using generator g"""
+
+        if param is None:
+            param = Param(q0=1, n=0, v=100.000)
 
         lens = set()
         aligns = defaultdict(set)
@@ -90,7 +93,7 @@ class IBM:
     def __init__(self, t, param=None):
         self.t = t
         if param is None:
-            self.param = Param(q0=1, n=0.01, v=100.000)
+            self.param = Param(q0=1, n=0, v=100.000)
         else:
             self.param = param
 
