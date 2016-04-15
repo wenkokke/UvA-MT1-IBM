@@ -53,10 +53,10 @@ def run(corpus, ibm_cls, ibm_init, packs_path, corpus_name, n, skip_if_completed
 
 
 def print_test_example(ibm):
-    e = 'the government is doing what the Canadians want .'.split()
     f = 'le gouvernement fait ce que veulent les Canadiens .'.split()
+    e = 'the government is doing what the Canadians want .'.split()
 
-    a = ibm.predict_alignment(e,f)
+    a = ibm.predict_alignment(f,e)
 
     print ' '.join(e)
     print ' '.join(f)
