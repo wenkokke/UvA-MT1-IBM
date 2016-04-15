@@ -34,33 +34,6 @@ class IBM:
             self.em_iter(corpus,passnum=k)
 
 
-    def log_likelihood(self, corpus):
-
-        start = time.time()
-
-        likelihood = 0.0
-        for k, (f, e) in enumerate(corpus):
-
-            if k % 1000 == 0:
-                stdout.write("\rLog-likelihood calculations: %6.2f%%" % ((100 * k) / float(len(corpus))))
-                stdout.flush()
-
-            l = len(e) + 1
-            m = len(f) + 1
-            e = [None] + e
-
-            score = 0.0
-            for i in range(1, m):
-                score += sum(
-                    [ (self.q[(j, i, l, m)] * self.t[(f[i - 1], e[j])]) / (m * l)
-                      for j in range(0, l)])
-            likelihood += math.log(score)
-
-        print("\rLog-likelihood: %.5f (Elapsed: %.2fs)" % (likelihood,(time.time() - start)))
-
-        return likelihood
-
-
     def em_iter(self,corpus,passnum=1):
 
         start = time.time()
@@ -102,7 +75,10 @@ class IBM:
         self.t = defaultdict(float,{k: v / c2[k[1:]] for k,v in c1.iteritems() if v > 0.0})
         self.q = defaultdict(float,{k: v / c4[k[1:]] for k,v in c3.iteritems() if v > 0.0})
 
-        print("\rPass %2d: 100.00%% (Elapsed: %.2fs) (Likelihood: %.5f)" % (passnum,(time.time() - start),likelihood))
+        duration = (time.time() - start)
+        print("\rPass %2d: 100.00%% (Elapsed: %.2fs) (Likelihood: %.5f)" % (passnum,duration,likelihood))
+
+        return likelihood, duration
 
 
     def predict_alignment(self,f,e):
@@ -183,4 +159,4 @@ class IBM:
 
         print "\rInit     100.00%% (Elapsed: %.2fs)" % (time.time() - start)
 
-        return cls(t,q)
+        return cls(defaultdict(float,t),defaultdict(float,q))

@@ -1,10 +1,9 @@
 # coding: utf-8
+
 import itertools
-from msgpack     import pack,unpack
-from os          import path
+from os import path
 
 import os
-import matplotlib.pyplot as plt
 import ibm2
 import ibm1
 
@@ -40,7 +39,9 @@ def run(corpus, ibm_cls, ibm_init, packs_path, corpus_name, n, skip_if_completed
                 if ibm is None:
                     ibm = ibm_init()
                 else:
-                    ibm.em_train(corpus, n=1, s=s)
+                    (likelihood, time) = ibm.em_iter(corpus, s)
+                    with open(path.join(packs_path, corpus_name + '.results'), "a") as results_handle:
+                        results_handle.write("%d,%.4f,%.5f\n" % (s,time,likelihood))
 
                 with open(curr_pack_path, 'w') as stream:
                     ibm.dump(stream)
@@ -97,29 +98,29 @@ if __name__ == "__main__":
     en_vocabulary_len = len(set(itertools.chain(*en_corpus)))
     corpus = zip(read_corpus(fr_corpus_path), en_corpus)
 
-    ibm = ibm1.IBM
-    param = ibm1.Param()
-    model = run(corpus, ibm, lambda: ibm.random(corpus,param), path.join(data_path, 'model', 'ibm1', 'uniform'), corpus_name, 5, False)
-
-    def ibm2_with_ibm1(ibm,model1,corpus):
-        model2 = ibm.uniform(corpus)
-        model2.t = model1.t
-        return model2
-
-
-    ibm = ibm2.IBM
-    model_path = path.join(data_path, 'model', 'ibm2', 'ibm1-5')
-    model = run(corpus, ibm, lambda: ibm2_with_ibm1(ibm,model,corpus), model_path, corpus_name, 20, False)
-
-    ibm = ibm2.IBM
-
-    run(corpus, ibm, lambda: ibm.uniform(corpus), path.join(data_path,'model','ibm2','uniform'), corpus_name, 20, False)
-    run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random1'), corpus_name, 20, False)
-    run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random2'), corpus_name, 20, False)
-    run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random3'), corpus_name, 20, False)
-
     # ibm = ibm1.IBM
+    # param = ibm1.Param()
+    # model = run(corpus, ibm, lambda: ibm.random(corpus,param), path.join(data_path, 'model', 'ibm1', 'uniform'), corpus_name, 5, False)
     #
+    # def ibm2_with_ibm1(ibm,model1,corpus):
+    #     model2 = ibm.uniform(corpus)
+    #     model2.t = model1.t
+    #     return model2
+    #
+    #
+    # ibm = ibm2.IBM
+    # model_path = path.join(data_path, 'model', 'ibm2', 'ibm1-5')
+    # model = run(corpus, ibm, lambda: ibm2_with_ibm1(ibm,model,corpus), model_path, corpus_name, 20, False)
+    #
+    # ibm = ibm2.IBM
+    #
+    # run(corpus, ibm, lambda: ibm.uniform(corpus), path.join(data_path,'model','ibm2','uniform'), corpus_name, 20, False)
+    # run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random1'), corpus_name, 20, False)
+    # run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random2'), corpus_name, 20, False)
+    # run(corpus, ibm, lambda: ibm.random(corpus), path.join(data_path,'model','ibm2','random3'), corpus_name, 20, False)
+
+    ibm = ibm1.IBM
+
     # param = ibm1.Param()
     # run(corpus, ibm, lambda: ibm.uniform(corpus, param), path.join(data_path, 'model', 'ibm1', 'uniform'), corpus_name, 20, False)
     # param = ibm1.Param()
@@ -135,8 +136,8 @@ if __name__ == "__main__":
     # run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-n0.005'), corpus_name, 20, False)
     # param = ibm1.Param(n=0.0005, v=en_vocabulary_len)
     # run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-n0.0005'), corpus_name, 20, False)
-    #
-    # param = ibm1.Param(q0=2)
-    # run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-q02'), corpus_name, 20, False)
-    # param = ibm1.Param(q0=3)
-    # run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-q03'), corpus_name, 20, False)
+
+    param = ibm1.Param(q0=2)
+    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-q02'), corpus_name, 20, False)
+    param = ibm1.Param(q0=3)
+    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-q03'), corpus_name, 20, False)

@@ -80,7 +80,10 @@ class IBM:
             k: (v + self.param.n) / (c2[k[1:]] + (self.param.n * self.param.v))
             for k,v in c1.iteritems() if v > 0.0 })
 
-        print("\rPass %2d: 100.00%% (Elapsed: %.2fs) (Likelihood: %.5f)" % (passnum, (time.time() - start), likelihood))
+        duration = (time.time() - start)
+        print("\rPass %2d: 100.00%% (Elapsed: %.2fs) (Likelihood: %.5f)" % (passnum,duration,likelihood))
+
+        return likelihood, duration
 
     def predict_alignment(self, f, e):
         e = IBM.nones(self.param.q0) + e
@@ -145,4 +148,4 @@ class IBM:
 
         print "\rInit     100.00%% (Elapsed: %.2fs)" % (time.time() - start)
 
-        return cls(t,param)
+        return cls(defaultdict(float,t),param)
