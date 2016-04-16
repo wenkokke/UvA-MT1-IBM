@@ -1,6 +1,9 @@
 from os import path
 import matplotlib.pyplot as plt
 
+#
+# Quick hack script for generating nice graphs from the output
+#
 
 def read_results(model_path, corpus_name):
 
@@ -41,10 +44,81 @@ def read_results(model_path, corpus_name):
     return r
 
 
+def print_best(all_models):
+    print "Best Recall"
+    print max([(x[0],x[1][20][7]) for x in all_models], key=lambda x: x[1])
+    print "Worst Recall"
+    print min([(x[0],x[1][20][7]) for x in all_models], key=lambda x: x[1])
+    print "Best Precision"
+    print max([(x[0], x[1][20][6]) for x in all_models], key=lambda x: x[1])
+    print "Worst Precision"
+    print min([(x[0], x[1][20][6]) for x in all_models], key=lambda x: x[1])
+    print "Best AER"
+    print min([(x[0], x[1][20][9]) for x in all_models], key=lambda x: x[1])
+    print "Worst AER"
+    print max([(x[0], x[1][20][9]) for x in all_models], key=lambda x: x[1])
+
+
+def plot_likelihoods(all_models,colors):
+    legends = []
+    for i,(name, model_data) in enumerate(all_models):
+        legends.append(name)
+        plt.plot(range(1, 21), [iteration_data[2] for iteration_data in model_data if iteration_data[2] != 0], color=colors[i])
+    plt.legend(legends, loc='lower right', prop={'size':10})
+    plt.xlabel('Iterations')
+    plt.ylabel('Log-likelihood')
+    plt.title('Log-likelihood progression during iterations')
+    plt.grid(True)
+    plt.savefig("../../data/log-likelihood.png")
+    plt.clf()
+
+
+def plot_aer(all_models, colors):
+    legends = []
+    for i,(name, model_data) in enumerate(all_models):
+        legends.append(name)
+        plt.plot(range(0, 21), [iteration_data[9] for iteration_data in model_data], color=colors[i])
+    plt.legend(legends, loc='upper right', prop={'size':10})
+    plt.xlabel('Iterations')
+    plt.ylabel('Alignment Error Rate (AER)')
+    plt.title('AER progression during iterations')
+    plt.grid(True)
+    plt.savefig("../../data/aer.png")
+    plt.clf()
+
+
+def plot_precision(all_models, colors):
+    legends = []
+    for i,(name, model_data) in enumerate(all_models):
+        legends.append(name)
+        plt.plot(range(0, 21), [iteration_data[6] for iteration_data in model_data], color=colors[i])
+    plt.legend(legends, loc='lower right', prop={'size':10})
+    plt.xlabel('Iterations')
+    plt.ylabel('Precision')
+    plt.title('Precision progression during iterations')
+    plt.grid(True)
+    plt.savefig("../../data/precision.png")
+    plt.clf()
+
+
+def plot_recall(all_models, colors):
+    legends = []
+    for i,(name, model_data) in enumerate(all_models):
+        legends.append(name)
+        plt.plot(range(0, 21), [iteration_data[7] for iteration_data in model_data], color=colors[i])
+    plt.legend(legends, loc='lower right', prop={'size':10})
+    plt.xlabel('Iteration')
+    plt.ylabel('Recall')
+    plt.title('Recall progression during iterations')
+    plt.grid(True)
+    plt.savefig("../../data/recall.png")
+    plt.clf()
+
+
 def main():
     """Program entry point"""
 
-    data_path = path.join(path.dirname(__file__), '..', 'data')
+    data_path = path.join(path.dirname(__file__), '..', '..', 'data')
     corpus_name = 'hansards.36.2'  # hansards.36.2
 
     model_paths = [
@@ -70,83 +144,29 @@ def main():
         name = path.split(path.split(model_path)[0])[1] + ' ' + path.split(model_path)[1]
         all_models.append((name,read_results(model_path, corpus_name)))
 
-    plot_likelihoods(all_models)
-    plot_aer(all_models)
-    plot_precision(all_models)
-    plot_recall(all_models)
+    colors = [
+        '#ff00ff',
+        '#ff99cc',
+        '#ff0000',
+        '#b30000',
+        '#800000',
+        '#00ffff',
+        '#0000ff',
+        '#3333ff',
+        '#6666ff',
+        '#cccc00',
+        '#999900',
+        '#666600',
+        '#00ff00',
+        '#00cc00'
+    ]
+
+    plot_likelihoods(all_models, colors)
+    plot_aer(all_models, colors)
+    plot_precision(all_models, colors)
+    plot_recall(all_models, colors)
 
     print_best(all_models)
-
-
-def print_best(all_models):
-    print "Best Recall"
-    print max([(x[0],x[1][20][7]) for x in all_models], key=lambda x: x[1])
-    print "Worst Recall"
-    print min([(x[0],x[1][20][7]) for x in all_models], key=lambda x: x[1])
-    print "Best Precision"
-    print max([(x[0], x[1][20][6]) for x in all_models], key=lambda x: x[1])
-    print "Worst Precision"
-    print min([(x[0], x[1][20][6]) for x in all_models], key=lambda x: x[1])
-    print "Best AER"
-    print min([(x[0], x[1][20][9]) for x in all_models], key=lambda x: x[1])
-    print "Worst AER"
-    print max([(x[0], x[1][20][9]) for x in all_models], key=lambda x: x[1])
-
-
-def plot_likelihoods(all_models):
-    legends = []
-    for (name, model_data) in all_models:
-        legends.append(name)
-        plt.plot(range(1, 21), [iteration_data[2] for iteration_data in model_data if iteration_data[2] != 0])
-    plt.legend(legends, loc='lower right', prop={'size':10})
-    plt.xlabel('Iterations')
-    plt.ylabel('Log-likelihood')
-    plt.title('Log-likelihood progression during iterations')
-    plt.grid(True)
-    plt.savefig("../data/log-likelihood.png")
-    plt.clf()
-
-
-def plot_aer(all_models):
-    legends = []
-    for (name, model_data) in all_models:
-        legends.append(name)
-        plt.plot(range(0, 21), [iteration_data[9] for iteration_data in model_data])
-    plt.legend(legends, loc='upper right', prop={'size':10})
-    plt.xlabel('Iterations')
-    plt.ylabel('Alignment Error Rate (AER)')
-    plt.title('AER progression during iterations')
-    plt.grid(True)
-    plt.savefig("../data/aer.png")
-    plt.clf()
-
-
-def plot_precision(all_models):
-    legends = []
-    for (name, model_data) in all_models:
-        legends.append(name)
-        plt.plot(range(0, 21), [iteration_data[6] for iteration_data in model_data])
-    plt.legend(legends, loc='lower right', prop={'size':10})
-    plt.xlabel('Iterations')
-    plt.ylabel('Precision')
-    plt.title('Precision progression during iterations')
-    plt.grid(True)
-    plt.savefig("../data/precision.png")
-    plt.clf()
-
-
-def plot_recall(all_models):
-    legends = []
-    for (name, model_data) in all_models:
-        legends.append(name)
-        plt.plot(range(0, 21), [iteration_data[7] for iteration_data in model_data])
-    plt.legend(legends, loc='lower right', prop={'size':10})
-    plt.xlabel('Iteration')
-    plt.ylabel('Recall')
-    plt.title('Recall progression during iterations')
-    plt.grid(True)
-    plt.savefig("../data/recall.png")
-    plt.clf()
 
 
 if __name__ == "__main__":
