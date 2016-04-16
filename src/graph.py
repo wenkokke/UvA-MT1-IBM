@@ -52,11 +52,11 @@ def main():
         path.join(data_path, 'model', 'ibm2', 'uniform'),
         path.join(data_path, 'model', 'ibm2', 'random1'),
         path.join(data_path, 'model', 'ibm2', 'random2'),
-        # path.join(data_path, 'model', 'ibm2', 'random3'),
+        path.join(data_path, 'model', 'ibm2', 'random3'),
         path.join(data_path, 'model', 'ibm1', 'uniform'),
-        # path.join(data_path, 'model', 'ibm1', 'random1'),
+        path.join(data_path, 'model', 'ibm1', 'random1'),
         path.join(data_path, 'model', 'ibm1', 'random2'),
-        # path.join(data_path, 'model', 'ibm1', 'random3'),
+        path.join(data_path, 'model', 'ibm1', 'random3'),
         path.join(data_path, 'model', 'ibm1', 'random-n0.01'),
         path.join(data_path, 'model', 'ibm1', 'random-n0.005'),
         path.join(data_path, 'model', 'ibm1', 'random-n0.0005'),
@@ -98,7 +98,7 @@ def plot_likelihoods(all_models):
     for (name, model_data) in all_models:
         legends.append(name)
         plt.plot(range(1, 21), [iteration_data[2] for iteration_data in model_data if iteration_data[2] != 0])
-    plt.legend(legends, loc='lower right')
+    plt.legend(legends, loc='lower right', prop={'size':10})
     plt.xlabel('Iterations')
     plt.ylabel('Log-likelihood')
     plt.title('Log-likelihood progression during iterations')
@@ -112,7 +112,7 @@ def plot_aer(all_models):
     for (name, model_data) in all_models:
         legends.append(name)
         plt.plot(range(0, 21), [iteration_data[9] for iteration_data in model_data])
-    plt.legend(legends, loc='upper right')
+    plt.legend(legends, loc='upper right', prop={'size':10})
     plt.xlabel('Iterations')
     plt.ylabel('Alignment Error Rate (AER)')
     plt.title('AER progression during iterations')
@@ -126,7 +126,7 @@ def plot_precision(all_models):
     for (name, model_data) in all_models:
         legends.append(name)
         plt.plot(range(0, 21), [iteration_data[6] for iteration_data in model_data])
-    plt.legend(legends, loc='lower right')
+    plt.legend(legends, loc='lower right', prop={'size':10})
     plt.xlabel('Iterations')
     plt.ylabel('Precision')
     plt.title('Precision progression during iterations')
@@ -140,7 +140,7 @@ def plot_recall(all_models):
     for (name, model_data) in all_models:
         legends.append(name)
         plt.plot(range(0, 21), [iteration_data[7] for iteration_data in model_data])
-    plt.legend(legends, loc='lower right')
+    plt.legend(legends, loc='lower right', prop={'size':10})
     plt.xlabel('Iteration')
     plt.ylabel('Recall')
     plt.title('Recall progression during iterations')
