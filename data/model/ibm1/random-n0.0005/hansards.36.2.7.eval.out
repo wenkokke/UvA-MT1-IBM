@@ -1,0 +1,19 @@
+
+The following results assume correct file formats.
+Make sure you have previously checked the file format
+using wa_check_submission.pl
+
+
+    Word Alignment Evaluation   
+----------------------------------
+   Evaluation of SURE alignments 
+   Precision = 0.3869  
+   Recall    = 0.6850
+   F-measure = 0.4945
+-----------------------------------
+   Evaluation of PROBABLE alignments
+   Precision = 0.6130
+   Recall    = 0.2513
+   F-measure = 0.3564
+-----------------------------------
+   AER       = 0.3610
