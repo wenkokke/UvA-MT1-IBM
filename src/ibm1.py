@@ -171,5 +171,5 @@ class IBM:
             return max(possible_alignments, key=lambda x: x[1])[0]
 
         return [
-            maximum_alignment(i)
+            maximum_alignment(i) - self.param.q0 + 1
             for i in range(1, m)]

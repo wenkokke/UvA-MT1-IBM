@@ -7,13 +7,13 @@ using wa_check_submission.pl
     Word Alignment Evaluation   
 ----------------------------------
    Evaluation of SURE alignments 
-   Precision = 0.0067  
-   Recall    = 0.0119
-   F-measure = 0.0086
+   Precision = 0.3425  
+   Recall    = 0.6075
+   F-measure = 0.4381
 -----------------------------------
    Evaluation of PROBABLE alignments
-   Precision = 0.1233
-   Recall    = 0.0506
-   F-measure = 0.0718
+   Precision = 0.5515
+   Recall    = 0.2265
+   F-measure = 0.3211
 -----------------------------------
-   AER       = 0.9169
+   AER       = 0.4283
