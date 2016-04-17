@@ -46,9 +46,9 @@ def read_results(model_path, corpus_name):
 
 def print_best(all_models):
     print "Best Recall"
-    print max([(x[0],x[1][20][7]) for x in all_models], key=lambda x: x[1])
+    print max([(x[0],x[1][20][4]) for x in all_models], key=lambda x: x[1])
     print "Worst Recall"
-    print min([(x[0],x[1][20][7]) for x in all_models], key=lambda x: x[1])
+    print min([(x[0],x[1][20][4]) for x in all_models], key=lambda x: x[1])
     print "Best Precision"
     print max([(x[0], x[1][20][6]) for x in all_models], key=lambda x: x[1])
     print "Worst Precision"
@@ -57,6 +57,9 @@ def print_best(all_models):
     print min([(x[0], x[1][20][9]) for x in all_models], key=lambda x: x[1])
     print "Worst AER"
     print max([(x[0], x[1][20][9]) for x in all_models], key=lambda x: x[1])
+
+    for x in all_models:
+        print "%s,%.4f,%.4f,%.4f" % (x[0],x[1][20][4],x[1][20][6],x[1][20][9])
 
 
 def plot_likelihoods(all_models,colors):
@@ -69,7 +72,7 @@ def plot_likelihoods(all_models,colors):
     plt.ylabel('Log-likelihood')
     plt.title('Log-likelihood progression during iterations')
     plt.grid(True)
-    plt.savefig("../../data/log-likelihood.png")
+    plt.savefig("log-likelihood.png")
     plt.clf()
 
 
@@ -83,7 +86,7 @@ def plot_aer(all_models, colors):
     plt.ylabel('Alignment Error Rate (AER)')
     plt.title('AER progression during iterations')
     plt.grid(True)
-    plt.savefig("../../data/aer.png")
+    plt.savefig("aer.png")
     plt.clf()
 
 
@@ -97,7 +100,7 @@ def plot_precision(all_models, colors):
     plt.ylabel('Precision')
     plt.title('Precision progression during iterations')
     plt.grid(True)
-    plt.savefig("../../data/precision.png")
+    plt.savefig("precision.png")
     plt.clf()
 
 
@@ -105,13 +108,13 @@ def plot_recall(all_models, colors):
     legends = []
     for i,(name, model_data) in enumerate(all_models):
         legends.append(name)
-        plt.plot(range(0, 21), [iteration_data[7] for iteration_data in model_data], color=colors[i])
+        plt.plot(range(0, 21), [iteration_data[4] for iteration_data in model_data], color=colors[i])
     plt.legend(legends, loc='lower right', prop={'size':10})
     plt.xlabel('Iteration')
     plt.ylabel('Recall')
     plt.title('Recall progression during iterations')
     plt.grid(True)
-    plt.savefig("../../data/recall.png")
+    plt.savefig("recall.png")
     plt.clf()
 
 
@@ -122,20 +125,20 @@ def main():
     corpus_name = 'hansards.36.2'  # hansards.36.2
 
     model_paths = [
-        path.join(data_path, 'model', 'ibm2', 'ibm1-5'),
-        path.join(data_path, 'model', 'ibm2', 'uniform'),
-        path.join(data_path, 'model', 'ibm2', 'random1'),
-        path.join(data_path, 'model', 'ibm2', 'random2'),
-        path.join(data_path, 'model', 'ibm2', 'random3'),
+        # path.join(data_path, 'model', 'ibm2', 'ibm1-5'),
+        # path.join(data_path, 'model', 'ibm2', 'uniform'),
+        # path.join(data_path, 'model', 'ibm2', 'random1'),
+        # path.join(data_path, 'model', 'ibm2', 'random2'),
+        # path.join(data_path, 'model', 'ibm2', 'random3'),
         path.join(data_path, 'model', 'ibm1', 'uniform'),
         path.join(data_path, 'model', 'ibm1', 'random1'),
         path.join(data_path, 'model', 'ibm1', 'random2'),
         path.join(data_path, 'model', 'ibm1', 'random3'),
-        path.join(data_path, 'model', 'ibm1', 'random-n0.01'),
-        path.join(data_path, 'model', 'ibm1', 'random-n0.005'),
-        path.join(data_path, 'model', 'ibm1', 'random-n0.0005'),
-        path.join(data_path, 'model', 'ibm1', 'random-q02'),
-        path.join(data_path, 'model', 'ibm1', 'random-q03')
+        path.join(data_path, 'model', 'ibm1', 'uniform-n0.01'),
+        path.join(data_path, 'model', 'ibm1', 'uniform-n0.005'),
+        path.join(data_path, 'model', 'ibm1', 'uniform-n0.0005'),
+        path.join(data_path, 'model', 'ibm1', 'uniform-q02'),
+        path.join(data_path, 'model', 'ibm1', 'uniform-q03')
     ]
 
     all_models = []

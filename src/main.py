@@ -137,17 +137,17 @@ def main():
 
     # Train IBM1 with smoothing
     param = ibm1.Param(n=0.01, v=en_vocabulary_len)
-    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-n0.01'), corpus_name, 20)
+    run(corpus, ibm, lambda: ibm.uniform(corpus, param), path.join(data_path, 'model', 'ibm1', 'uniform-n0.01'), corpus_name, 20)
     param = ibm1.Param(n=0.005, v=en_vocabulary_len)
-    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-n0.005'), corpus_name, 20)
+    run(corpus, ibm, lambda: ibm.uniform(corpus, param), path.join(data_path, 'model', 'ibm1', 'uniform-n0.005'), corpus_name, 20)
     param = ibm1.Param(n=0.0005, v=en_vocabulary_len)
-    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-n0.0005'), corpus_name, 20)
+    run(corpus, ibm, lambda: ibm.uniform(corpus, param), path.join(data_path, 'model', 'ibm1', 'uniform-n0.0005'), corpus_name, 20)
 
     # Train IBM1 with additional null words
     param = ibm1.Param(q0=2)
-    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-q02'), corpus_name, 20)
+    run(corpus, ibm, lambda: ibm.uniform(corpus, param), path.join(data_path, 'model', 'ibm1', 'uniform-q02'), corpus_name, 20)
     param = ibm1.Param(q0=3)
-    run(corpus, ibm, lambda: ibm.random(corpus, param), path.join(data_path, 'model', 'ibm1', 'random-q03'), corpus_name, 20)
+    run(corpus, ibm, lambda: ibm.uniform(corpus, param), path.join(data_path, 'model', 'ibm1', 'uniform-q03'), corpus_name, 20)
 
 
 if __name__ == "__main__":
